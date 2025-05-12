@@ -1,0 +1,46 @@
+1. Conformité au format PDF/A-3
+Le conteneur principal est un fichier PDF/A-3. Ce format impose plusieurs contraintes strictes :
+
+Critère	Détail
+Fonts	Toutes les polices doivent être embarquées dans le PDF (pas de dépendance externe)
+Couleurs	Les profils ICC doivent être définis (pas de DeviceRGB sans OutputIntent explicite)
+Aucune action dynamique	Pas de JavaScript, de formulaires interactifs ou d’hyperliens externes
+Signatures numériques	Possibles mais doivent être conformes à la norme PAdES
+Métadonnées XMP	Doivent être présentes, lisibles, et contenir : titre, auteur, date de création
+Norme de conformité	Doit déclarer le profil PDF/A-3 via ConformanceLevel="B" ou U
+
+📎 2. Intégration du fichier XML (Factur-X XML)
+Le fichier XML est embarqué en pièce jointe dans le PDF/A-3 via l’annotation AFRelationship="Data".
+
+Critère	Détail
+Nom de la pièce jointe	factur-x.xml
+MIME type	application/xml
+Relation	AFRelationship="Data"
+Lien logique	L’objet AF (Associated File) doit pointer depuis le PDF vers l’XML
+Encodage	UTF-8 sans BOM
+Validation XML	Conforme au schéma XSD Factur-X (fourni par FNFE-MPE ou ZUGFeRD pour Allemagne)
+
+🧠 3. Validité sémantique du fichier XML
+Le XML embarque les données comptables. Il doit être sémantiquement valide selon le profil Factur-X utilisé :
+
+Profil	Données obligatoires
+MINIMUM	Numéro de facture, émetteur, destinataire, date, montant total
+BASIC WL	+ Détail des lignes, TVA, conditions de paiement
+EN16931 (FULL)	+ Numérotation produit/service, références commandes, remises, retenues
+
+⚠️ Le format Factur-X peut être rejeté si :
+
+Des champs requis manquent
+
+Des champs ne respectent pas les types (ex : AmountCurrencyCode="EUR" attendu)
+
+Des valeurs mal encodées (dates non ISO 8601, etc.)
+
+📤 4. Métadonnées PDF et structure de fichier
+Factur-X exige un minimum de cohérence dans la structure du PDF :
+
+Élément	Règle
+PDF/A Identification	/PDF/AIdentification doit être présent avec /Part 3 et /Conformance B
+XMP Metadata	Le bloc XMP doit refléter les métadonnées visibles dans le document
+AFEntries	Table des fichiers associés (AF) doit contenir le XML uniquement
+EmbeddedFiles	Le XML doit être retrouvé dans /EmbeddedFiles
