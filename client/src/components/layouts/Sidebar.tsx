@@ -35,8 +35,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           {navItems.map((item) => (
             <li key={item.path}>
               <Link href={item.path}>
-                <a 
-                  className={`flex items-center px-4 py-3 ${
+                <div 
+                  className={`flex items-center px-4 py-3 cursor-pointer ${
                     isActive(item.path) 
                       ? "text-primary bg-blue-50" 
                       : "text-neutral-dark hover:bg-blue-50"
@@ -44,7 +44,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 >
                   <span className="material-icons mr-3">{item.icon}</span>
                   {item.label}
-                </a>
+                </div>
               </Link>
             </li>
           ))}

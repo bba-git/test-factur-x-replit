@@ -75,28 +75,34 @@ export default function ValidationModal({ open, onClose, invoice }: ValidationMo
         ) : (
           <>
             <div className="mb-6">
-              <div className="flex items-center mb-4">
+              <div className={`flex items-center mb-4 p-4 rounded-lg border ${validationResult.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                 {validationResult.isValid ? (
                   <>
-                    <span className="material-icons text-success mr-2">check_circle</span>
-                    <h3 className="font-medium text-lg">Invoice is Valid</h3>
+                    <span className="material-icons text-success mr-3 text-2xl">check_circle</span>
+                    <div>
+                      <h3 className="font-medium text-lg text-green-800">Invoice is Valid</h3>
+                      <p className="text-sm text-green-700">This invoice meets all Factur-X/ZUGFeRD requirements</p>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <span className="material-icons text-error mr-2">error</span>
-                    <h3 className="font-medium text-lg">Validation Issues Found</h3>
+                    <span className="material-icons text-error mr-3 text-2xl">error</span>
+                    <div>
+                      <h3 className="font-medium text-lg text-red-800">Validation Issues Found</h3>
+                      <p className="text-sm text-red-700">The invoice doesn't comply with Factur-X/ZUGFeRD standards</p>
+                    </div>
                   </>
                 )}
               </div>
               
               {!validationResult.isValid && (
                 <>
-                  <p className="text-gray-600 mb-4">The invoice doesn't comply with Factur-X/ZUGFeRD standards. Please fix the following issues:</p>
+                  <p className="text-gray-600 mb-4">Please fix the following issues to ensure compliance:</p>
                   
                   <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <ul className="list-disc pl-5 space-y-2">
+                    <ul className="list-disc pl-5 space-y-2 text-red-800">
                       {validationResult.errors.map((error, index) => (
-                        <li key={index}>{error}</li>
+                        <li key={index} className="text-sm">{error}</li>
                       ))}
                     </ul>
                   </div>
