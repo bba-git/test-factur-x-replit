@@ -7,4 +7,5 @@ dependencies = [
     "ghostscript>=0.7",
     "lxml>=5.4.0",
     "pikepdf>=9.7.0",
+    "reportlab>=4.4.0",
 ]

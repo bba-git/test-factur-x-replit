@@ -1,0 +1,53 @@
+{
+  "invoice_number": "INV-2025-0001",
+  "issue_date": "2025-05-13",
+  "due_date": "2025-06-12",
+  "currency": "EUR",
+  "subtotal": 1000.00,
+  "vat_total": 200.00,
+  "total": 1200.00,
+  "notes": "Thank you for your business",
+  "payment_terms": "30 days",
+  "purchase_order_ref": "PO-2025-1234",
+  
+  "seller": {
+    "name": "Your Company SAS",
+    "address": "123 Business Street",
+    "city": "Paris",
+    "postal_code": "75001",
+    "country": "FR",
+    "vat_number": "FR12345678901",
+    "email": "contact@yourcompany.com",
+    "phone": "+331234567890"
+  },
+  
+  "buyer": {
+    "name": "Client Corporation",
+    "address": "456 Client Avenue",
+    "city": "Lyon",
+    "postal_code": "69001",
+    "country": "FR",
+    "vat_number": "FR98765432109",
+    "email": "accounting@clientcorp.com",
+    "phone": "+331987654321"
+  },
+  
+  "items": [
+    {
+      "description": "Consulting Services",
+      "quantity": 10,
+      "unit_price": 80.00,
+      "vat_rate": 20,
+      "unit_of_measure": "HUR",
+      "product_id": "SRV-001"
+    },
+    {
+      "description": "Software License",
+      "quantity": 1,
+      "unit_price": 200.00,
+      "vat_rate": 20,
+      "unit_of_measure": "C62",
+      "product_id": "LIC-001"
+    }
+  ]
+}
