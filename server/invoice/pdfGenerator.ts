@@ -186,40 +186,78 @@ async function createInvoicePdf(
   });
 }
 
-// Function to convert PDF to PDF/A-3 and embed XML
+// Function to convert PDF to PDF/A-3B and embed XML
 async function convertToPdfA3AndEmbedXml(
   pdfBuffer: Buffer,
   xmlContent: string,
   invoice: Invoice
 ): Promise<Buffer> {
   try {
-    // Load the PDF document
-    const pdfDoc = await PDFLib.load(pdfBuffer);
+    // Import our Factur-X generator module
+    const { createFacturXInvoice } = await import('./facturx');
     
-    // Set PDF/A-3 metadata
-    pdfDoc.setTitle(`Invoice ${invoice.invoiceNumber}`);
-    pdfDoc.setAuthor('InvoiceX');
-    pdfDoc.setSubject('Factur-X/ZUGFeRD Invoice');
-    pdfDoc.setKeywords(['invoice', 'factur-x', 'zugferd', 'pdf/a-3']);
-    pdfDoc.setCreationDate(new Date());
-    pdfDoc.setModificationDate(new Date());
-
-    // In a production environment, we would:
-    // 1. Properly embed the XML file with AFRelationship="Data"
-    // 2. Add PDF/A-3 conformance identifier
-    // 3. Embed all fonts
-    // 4. Add proper ICC color profiles
+    // First, write the PDF to a temporary file
+    const fs = await import('fs');
+    const path = await import('path');
+    const os = await import('os');
     
-    // For this demo, we'll simplify by just converting our PDF and adding the XML
-    // as a file attachment. In a real implementation, more would be needed for
-    // full PDF/A-3 and Factur-X compliance.
+    // Create temp directory and files
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'invoice-'));
+    const inputPdfPath = path.join(tempDir, 'invoice.pdf');
+    const outputPdfPath = path.join(tempDir, 'facturx-invoice.pdf');
+    const xmlPath = path.join(tempDir, 'invoice.xml');
     
-    // Save the PDF
-    const pdfA3Buffer = await pdfDoc.save();
+    // Write files
+    fs.writeFileSync(inputPdfPath, pdfBuffer);
+    fs.writeFileSync(xmlPath, xmlContent);
     
-    return Buffer.from(pdfA3Buffer);
+    // Fetch invoice items
+    const items = await storage.getInvoiceItems(invoice.id);
+    
+    // Generate Factur-X PDF using our Python script
+    await createFacturXInvoice(
+      inputPdfPath,
+      invoice,
+      items,
+      outputPdfPath,
+      invoice.profile || 'EN16931'
+    );
+    
+    // Read the resulting PDF
+    let resultBuffer: Buffer;
+    
+    if (fs.existsSync(outputPdfPath)) {
+      // If our Factur-X process succeeded, use the output
+      resultBuffer = fs.readFileSync(outputPdfPath);
+      console.log(`Successfully created Factur-X invoice for ${invoice.invoiceNumber}`);
+    } else {
+      // Fallback to the original PDF if process failed
+      console.warn(`Factur-X process failed, using original PDF for ${invoice.invoiceNumber}`);
+      
+      // Load the PDF document with pdf-lib as a simple fallback
+      const pdfDoc = await PDFLib.load(pdfBuffer);
+      
+      // Set basic metadata
+      pdfDoc.setTitle(`Invoice ${invoice.invoiceNumber}`);
+      pdfDoc.setAuthor('InvoiceX');
+      pdfDoc.setSubject('Invoice');
+      pdfDoc.setCreationDate(new Date());
+      
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      resultBuffer = Buffer.from(pdfBytes);
+    }
+    
+    // Clean up temp files
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      console.error('Error cleaning up temp files:', cleanupError);
+    }
+    
+    return resultBuffer;
   } catch (error) {
-    console.error('Error converting to PDF/A-3:', error);
-    throw new Error('Failed to convert to PDF/A-3');
+    console.error('Error creating Factur-X PDF:', error);
+    throw new Error('Failed to create Factur-X PDF');
   }
 }
