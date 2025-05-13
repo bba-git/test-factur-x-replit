@@ -1,0 +1,10 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "ghostscript>=0.7",
+    "lxml>=5.4.0",
+    "pikepdf>=9.7.0",
+]
