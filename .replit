@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["freetype", "ghostscript", "glibcLocales", "jbig2dec", "mupdf", "qpdf", "wget", "xcodebuild", "zlib"]
+packages = ["freetype", "ghostscript", "glibcLocales", "jbig2dec", "mupdf", "qpdf", "wget", "xcodebuild", "zlib", "jdk"]
 
 [deployment]
 deploymentTarget = "autoscale"

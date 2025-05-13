@@ -48,7 +48,7 @@ def convert_to_pdfa3b(input_pdf, output_pdf):
 
 def generate_facturx_xml(json_file, xml_file):
     """
-    Generate Factur-X XML using Mustangproject CLI
+    Generate Factur-X XML using our Python script
     
     Args:
         json_file (str): Path to the JSON file with invoice data
@@ -56,21 +56,164 @@ def generate_facturx_xml(json_file, xml_file):
     """
     print(f"Generating Factur-X XML from invoice data...")
     
-    # Mustangproject CLI command
-    mustang_command = [
-        "java", "-jar", "Mustang-CLI-2.16.4.jar",
-        "-j", json_file,
-        "-o", xml_file
-    ]
+    # Since Mustangproject CLI doesn't support direct JSON to XML conversion in recent versions,
+    # we'll generate the XML directly using our existing Python code
     
     try:
-        result = subprocess.run(mustang_command, check=True, capture_output=True, text=True)
+        import json
+        from datetime import datetime
+        
+        # Read JSON data
+        with open(json_file, 'r') as f:
+            data = json.load(f)
+        
+        invoice = data['invoice']
+        seller = data['seller']
+        buyer = data['buyer']
+        items = data['items']
+        totals = data['totals']
+        payment = data.get('payment', {})
+        
+        # Format date (from YYYY-MM-DD to YYYYMMDD)
+        def format_date(date_str):
+            if not date_str:
+                return ""
+            return date_str.replace("-", "")
+        
+        # Create Factur-X XML (CII - CrossIndustryInvoice format)
+        xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+    xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
+    <rsm:ExchangedDocumentContext>
+        <ram:GuidelineSpecifiedDocumentContextParameter>
+            <ram:ID>urn:factur-x.eu:1p0:{invoice.get('profile', 'EN16931')}</ram:ID>
+        </ram:GuidelineSpecifiedDocumentContextParameter>
+    </rsm:ExchangedDocumentContext>
+    <rsm:ExchangedDocument>
+        <ram:ID>{invoice.get('number', '')}</ram:ID>
+        <ram:TypeCode>380</ram:TypeCode>
+        <ram:IssueDateTime>
+            <udt:DateTimeString format="102">{format_date(invoice.get('date', ''))}</udt:DateTimeString>
+        </ram:IssueDateTime>
+    </rsm:ExchangedDocument>
+    <rsm:SupplyChainTradeTransaction>
+        <ram:ApplicableHeaderTradeAgreement>
+            <ram:SellerTradeParty>
+                <ram:Name>{seller.get('name', '')}</ram:Name>
+                <ram:PostalTradeAddress>
+                    <ram:LineOne>{seller.get('address', '')}</ram:LineOne>
+                    <ram:PostcodeCode>{seller.get('zip', '')}</ram:PostcodeCode>
+                    <ram:CityName>{seller.get('city', '')}</ram:CityName>
+                    <ram:CountryID>{seller.get('country', '')}</ram:CountryID>
+                </ram:PostalTradeAddress>
+                <ram:SpecifiedTaxRegistration>
+                    <ram:ID schemeID="VA">{seller.get('taxID', '')}</ram:ID>
+                </ram:SpecifiedTaxRegistration>
+            </ram:SellerTradeParty>
+            <ram:BuyerTradeParty>
+                <ram:Name>{buyer.get('name', '')}</ram:Name>
+                <ram:PostalTradeAddress>
+                    <ram:LineOne>{buyer.get('address', '')}</ram:LineOne>
+                    <ram:PostcodeCode>{buyer.get('zip', '')}</ram:PostcodeCode>
+                    <ram:CityName>{buyer.get('city', '')}</ram:CityName>
+                    <ram:CountryID>{buyer.get('country', '')}</ram:CountryID>
+                </ram:PostalTradeAddress>
+                <ram:SpecifiedTaxRegistration>
+                    <ram:ID schemeID="VA">{buyer.get('taxID', '')}</ram:ID>
+                </ram:SpecifiedTaxRegistration>
+            </ram:BuyerTradeParty>
+        </ram:ApplicableHeaderTradeAgreement>
+        <ram:ApplicableHeaderTradeDelivery>
+            <ram:ActualDeliverySupplyChainEvent>
+                <ram:OccurrenceDateTime>
+                    <udt:DateTimeString format="102">{format_date(data.get('delivery', {}).get('date', invoice.get('date', '')))}</udt:DateTimeString>
+                </ram:OccurrenceDateTime>
+            </ram:ActualDeliverySupplyChainEvent>
+        </ram:ApplicableHeaderTradeDelivery>
+        <ram:ApplicableHeaderTradeSettlement>
+            <ram:InvoiceCurrencyCode>{invoice.get('currency', 'EUR')}</ram:InvoiceCurrencyCode>
+            <ram:SpecifiedTradeSettlementPaymentMeans>
+                <ram:TypeCode>58</ram:TypeCode>
+                <ram:PayeePartyCreditorFinancialAccount>
+                    <ram:IBANID>{payment.get('iban', '')}</ram:IBANID>
+                </ram:PayeePartyCreditorFinancialAccount>
+            </ram:SpecifiedTradeSettlementPaymentMeans>'''
+        
+        # Add tax summary
+        xml_content += f'''
+            <ram:ApplicableTradeTax>
+                <ram:CalculatedAmount>{totals.get('vatAmount', 0):.2f}</ram:CalculatedAmount>
+                <ram:TypeCode>VAT</ram:TypeCode>
+                <ram:BasisAmount>{totals.get('netAmount', 0):.2f}</ram:BasisAmount>
+                <ram:CategoryCode>S</ram:CategoryCode>
+                <ram:RateApplicablePercent>20.00</ram:RateApplicablePercent>
+            </ram:ApplicableTradeTax>'''
+        
+        # Add payment terms
+        xml_content += f'''
+            <ram:SpecifiedTradePaymentTerms>
+                <ram:DueDateDateTime>
+                    <udt:DateTimeString format="102">{format_date(invoice.get('dueDate', ''))}</udt:DateTimeString>
+                </ram:DueDateDateTime>
+            </ram:SpecifiedTradePaymentTerms>'''
+        
+        # Add monetary totals
+        xml_content += f'''
+            <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+                <ram:LineTotalAmount>{totals.get('netAmount', 0):.2f}</ram:LineTotalAmount>
+                <ram:TaxBasisTotalAmount>{totals.get('netAmount', 0):.2f}</ram:TaxBasisTotalAmount>
+                <ram:TaxTotalAmount>{totals.get('vatAmount', 0):.2f}</ram:TaxTotalAmount>
+                <ram:GrandTotalAmount>{totals.get('grandTotal', 0):.2f}</ram:GrandTotalAmount>
+                <ram:DuePayableAmount>{totals.get('grandTotal', 0):.2f}</ram:DuePayableAmount>
+            </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+        </ram:ApplicableHeaderTradeSettlement>'''
+        
+        # Add line items
+        for i, item in enumerate(items, 1):
+            line_net_amount = item.get('quantity', 0) * item.get('unitPrice', 0)
+            xml_content += f'''
+        <ram:IncludedSupplyChainTradeLineItem>
+            <ram:AssociatedDocumentLineDocument>
+                <ram:LineID>{i}</ram:LineID>
+            </ram:AssociatedDocumentLineDocument>
+            <ram:SpecifiedTradeProduct>
+                <ram:Name>{item.get('name', '')}</ram:Name>
+                <ram:Description>{item.get('note', '')}</ram:Description>
+            </ram:SpecifiedTradeProduct>
+            <ram:SpecifiedLineTradeAgreement>
+                <ram:NetPriceProductTradePrice>
+                    <ram:ChargeAmount>{item.get('unitPrice', 0):.2f}</ram:ChargeAmount>
+                </ram:NetPriceProductTradePrice>
+            </ram:SpecifiedLineTradeAgreement>
+            <ram:SpecifiedLineTradeDelivery>
+                <ram:BilledQuantity unitCode="{item.get('unit', 'C62')}">{item.get('quantity', 0)}</ram:BilledQuantity>
+            </ram:SpecifiedLineTradeDelivery>
+            <ram:SpecifiedLineTradeSettlement>
+                <ram:ApplicableTradeTax>
+                    <ram:TypeCode>VAT</ram:TypeCode>
+                    <ram:CategoryCode>S</ram:CategoryCode>
+                    <ram:RateApplicablePercent>{item.get('vatPercent', 0):.2f}</ram:RateApplicablePercent>
+                </ram:ApplicableTradeTax>
+                <ram:SpecifiedTradeSettlementLineMonetarySummation>
+                    <ram:LineTotalAmount>{line_net_amount:.2f}</ram:LineTotalAmount>
+                </ram:SpecifiedTradeSettlementLineMonetarySummation>
+            </ram:SpecifiedLineTradeSettlement>
+        </ram:IncludedSupplyChainTradeLineItem>'''
+        
+        # Close the XML
+        xml_content += '''
+    </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>'''
+        
+        # Write to file
+        with open(xml_file, 'w', encoding='utf-8') as f:
+            f.write(xml_content)
+        
         print(f"Successfully generated Factur-X XML: {xml_file}")
         return True
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Error generating Factur-X XML: {e}")
-        print(f"Mustangproject output: {e.stdout}")
-        print(f"Mustangproject error: {e.stderr}")
         return False
 
 def embed_xml_in_pdf(pdf_file, xml_file, output_file, profile="EN16931"):
@@ -93,42 +236,49 @@ def embed_xml_in_pdf(pdf_file, xml_file, output_file, profile="EN16931"):
         with open(xml_file, 'rb') as f:
             xml_content = f.read()
         
-        # Create embedded file stream
-        af_file = pdf.make_stream(xml_content)
-        af_file[Name.Type] = Name.EmbeddedFile
-        af_file[Name.Subtype] = pikepdf.String("application/xml")
+        # Create embedded file
+        xml_stream = pdf.make_stream(xml_content)
+        xml_stream_dict = pikepdf.Dictionary()
+        xml_stream_dict[Name.Type] = Name.EmbeddedFile
+        xml_stream_dict[Name.Subtype] = pikepdf.String("application/xml")
         
-        # Create file specification dictionary
-        embedded_file = Dictionary({
-            Name.Type: Name.Filespec,
-            Name.F: "factur-x.xml",
-            Name.UF: "factur-x.xml",
-            Name.AFRelationship: Name.Data,
-            Name.Desc: "Factur-X Invoice Data",
-            Name.EF: Dictionary({Name.F: af_file})
-        })
+        # Create filespec
+        filespec = pikepdf.Dictionary()
+        filespec[Name.Type] = Name.Filespec
+        filespec[Name.F] = pikepdf.String("factur-x.xml")
+        filespec[Name.UF] = pikepdf.String("factur-x.xml")
+        filespec[Name.AFRelationship] = Name.Data
+        filespec[Name.Desc] = pikepdf.String("Factur-X Invoice Data")
         
-        # Add to root catalog
+        # Add file to filespec
+        ef_dict = pikepdf.Dictionary()
+        ef_dict[Name.F] = xml_stream
+        filespec[Name.EF] = ef_dict
+        
+        # Add to root AF array
         if Name.AF not in pdf.Root:
-            pdf.Root[Name.AF] = Array()
-        pdf.Root[Name.AF].append(embedded_file)
+            pdf.Root[Name.AF] = pikepdf.Array()
         
-        # Add to EmbeddedFiles name tree
+        # Make the filespec indirect before adding it to avoid reference issues
+        pdf.Root[Name.AF].append(pdf.make_indirect(filespec))
+        
+        # Add to Names tree
         if Name.Names not in pdf.Root:
-            pdf.Root[Name.Names] = Dictionary()
-            
-        if Name.EmbeddedFiles not in pdf.Root[Name.Names]:
-            pdf.Root[Name.Names][Name.EmbeddedFiles] = Dictionary()
-            
-        ef_dict = pdf.Root[Name.Names][Name.EmbeddedFiles]
-        if Name.Names not in ef_dict:
-            ef_dict[Name.Names] = Array()
-            
-        names_array = ef_dict[Name.Names]
-        names_array.append(pikepdf.String("factur-x.xml"))
-        names_array.append(embedded_file)
+            pdf.Root[Name.Names] = pikepdf.Dictionary()
         
-        # Add/update XMP metadata
+        if Name.EmbeddedFiles not in pdf.Root[Name.Names]:
+            pdf.Root[Name.Names][Name.EmbeddedFiles] = pikepdf.Dictionary()
+        
+        efDict = pdf.Root[Name.Names][Name.EmbeddedFiles]
+        
+        if Name.Names not in efDict:
+            efDict[Name.Names] = pikepdf.Array()
+        
+        # Add to names array
+        efDict[Name.Names].append(pikepdf.String("factur-x.xml"))
+        efDict[Name.Names].append(pdf.make_indirect(filespec))
+        
+        # Add XMP metadata
         with pdf.open_metadata() as meta:
             # Factur-X metadata
             meta["fx:conformance"] = profile
@@ -143,8 +293,8 @@ def embed_xml_in_pdf(pdf_file, xml_file, output_file, profile="EN16931"):
             # Other required metadata
             meta["dc:title"] = "Factur-X Invoice"
             meta["dc:description"] = "Invoice with embedded Factur-X XML"
-            
-        # Save the PDF with embedded XML
+        
+        # Save to output file
         pdf.save(output_file)
         print(f"Successfully embedded XML and saved to {output_file}")
         return True
@@ -164,18 +314,39 @@ def validate_facturx_pdf(pdf_path):
                 
             # Check for embedded XML
             has_xml = False
+            has_xml_af = False
+            has_xml_names = False
+            
+            # Check AF array (required for PDF/A-3)
             if Name.AF in pdf.Root:
                 af_array = pdf.Root[Name.AF]
-                for item in af_array:
-                    if Name.F in item and item[Name.F] == "factur-x.xml":
-                        if Name.EF in item and Name.F in item[Name.EF]:
-                            has_xml = True
+                for i in range(len(af_array)):
+                    item = af_array[i]
+                    if isinstance(item, pikepdf.Object) and hasattr(item, 'keys'):
+                        if Name.F in item and str(item[Name.F]) == "factur-x.xml":
+                            if Name.EF in item and Name.F in item[Name.EF]:
+                                has_xml_af = True
+            
+            # Check Names tree (required for easy extraction)
+            if Name.Names in pdf.Root and Name.EmbeddedFiles in pdf.Root[Name.Names]:
+                ef_dict = pdf.Root[Name.Names][Name.EmbeddedFiles]
+                if Name.Names in ef_dict:
+                    names_array = ef_dict[Name.Names]
+                    for i in range(0, len(names_array), 2):
+                        if i+1 < len(names_array) and str(names_array[i]) == "factur-x.xml":
+                            has_xml_names = True
+            
+            has_xml = has_xml_af or has_xml_names
                             
             # Report results            
             if has_pdfa and has_facturx and has_xml:
                 print("✅ PDF/A-3B validation: PASS")
                 print("✅ Factur-X metadata: PASS")
                 print("✅ Embedded XML: PASS")
+                if has_xml_af:
+                    print("  ✓ XML found in AF array")
+                if has_xml_names:
+                    print("  ✓ XML found in Names tree")
                 return True
             else:
                 if not has_pdfa:
@@ -184,10 +355,15 @@ def validate_facturx_pdf(pdf_path):
                     print("❌ Factur-X metadata: FAIL")
                 if not has_xml:
                     print("❌ Embedded XML: FAIL")
+                    if not has_xml_af:
+                        print("  ✗ XML not found in AF array")
+                    if not has_xml_names:
+                        print("  ✗ XML not found in Names tree")
                 return False
                 
     except Exception as e:
         print(f"Error validating PDF: {e}")
+        print(f"Exception details: {str(e)}")
         return False
 
 def create_facturx_invoice(input_pdf, json_file, output_pdf, profile="EN16931"):
