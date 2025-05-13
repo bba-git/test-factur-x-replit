@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { storage } from '../storage';
 
 const execPromise = promisify(exec);
 
@@ -40,6 +41,14 @@ export async function createFacturXInvoice(
     const tempDir = fs.mkdtempSync(path.join('/tmp', 'facturx-'));
     const jsonFile = path.join(tempDir, 'invoice.json');
     
+    // Fetch required data
+    const customer = await storage.getCustomer(invoice.customerId);
+    const companyProfile = await storage.getCompanyProfile(invoice.companyProfileId);
+    
+    if (!customer || !companyProfile) {
+      throw new Error("Customer or company profile not found");
+    }
+    
     // Prepare invoice data in the format our Python script expects
     const invoiceData = {
       invoice: {
@@ -51,39 +60,39 @@ export async function createFacturXInvoice(
         profile: profile
       },
       seller: {
-        name: invoice.sellerName || '',
-        address: invoice.sellerAddress || '',
-        zip: invoice.sellerZip || '',
-        city: invoice.sellerCity || '',
-        country: invoice.sellerCountry || '',
-        taxID: invoice.sellerTaxId || '',
-        email: invoice.sellerEmail || ''
+        name: companyProfile.name || '',
+        address: companyProfile.address || '',
+        zip: companyProfile.postalCode || '',
+        city: companyProfile.city || '',
+        country: companyProfile.country || '',
+        taxID: companyProfile.vatNumber || '',
+        email: companyProfile.email || ''
       },
       buyer: {
-        name: invoice.buyerName || '',
-        address: invoice.buyerAddress || '',
-        zip: invoice.buyerZip || '',
-        city: invoice.buyerCity || '',
-        country: invoice.buyerCountry || '',
-        taxID: invoice.buyerTaxId || '',
-        email: invoice.buyerEmail || ''
+        name: customer.name || '',
+        address: customer.address || '',
+        zip: customer.postalCode || '',
+        city: customer.city || '',
+        country: customer.country || '',
+        taxID: customer.vatNumber || '',
+        email: customer.email || ''
       },
       items: items.map(item => ({
         name: item.description || '',
         quantity: item.quantity || 1,
-        unit: item.unit || 'pcs',
+        unit: item.unitOfMeasure || 'pcs',
         unitPrice: item.unitPrice || 0,
         vatPercent: item.vatRate || 20,
-        note: item.notes || ''
+        note: ''
       })),
       totals: {
-        netAmount: invoice.netAmount || 0,
-        vatAmount: invoice.vatAmount || 0,
-        grandTotal: invoice.totalAmount || 0
+        netAmount: invoice.subtotal || 0,
+        vatAmount: invoice.vatTotal || 0,
+        grandTotal: invoice.total || 0
       },
       payment: {
-        iban: invoice.paymentIban || '',
-        bic: invoice.paymentBic || '',
+        iban: '',
+        bic: '',
         reference: invoice.invoiceNumber
       }
     };
