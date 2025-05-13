@@ -35,38 +35,38 @@ def embed_xml_in_pdf(pdf_path, xml_path, output_path, profile="EN16931"):
         
         # Create file specification dictionary
         filespec = Dictionary(
-            Type=Name.Filespec,
-            F=Name("factur-x.xml"),
-            UF=Name("factur-x.xml"),
+            Type=Name("/Filespec"),
+            F=Name("/factur-x.xml"),
+            UF=Name("/factur-x.xml"),
             Desc="Factur-X Invoice XML",
-            AFRelationship=Name.Data,
+            AFRelationship=Name("/Data"),
             EF=Dictionary(
                 F=pdf.make_stream(xml_content, 
                                    Dictionary(
-                                       Type=Name.EmbeddedFile,
-                                       Subtype=Name("application/xml"),
+                                       Type=Name("/EmbeddedFile"),
+                                       Subtype=Name("/application#2Fxml"),
                                        ModDate=pdf.make_indirect(Dictionary()))
                                   )
             )
         )
         
-        # Set the PDF's root EmbeddedFiles if it doesn't exist
+        # Set the PDF's root Names if it doesn't exist
         if "/Names" not in pdf.Root:
-            pdf.Root.Names = Dictionary()
+            pdf.Root["/Names"] = Dictionary()
         
-        if "/EmbeddedFiles" not in pdf.Root.Names:
-            pdf.Root.Names.EmbeddedFiles = Dictionary(
-                Names=[]
-            )
-        
-        # Add the file specification to the PDF's Names.EmbeddedFiles.Names array
-        embedded_files = pdf.Root.Names.EmbeddedFiles
-        if "Names" not in embedded_files:
-            embedded_files.Names = []
+        # Add EmbeddedFiles dictionary to Names if it doesn't exist
+        if "/EmbeddedFiles" not in pdf.Root["/Names"]:
+            pdf.Root["/Names"]["/EmbeddedFiles"] = Dictionary()
+            
+        # Add Names array to EmbeddedFiles if it doesn't exist
+        embedded_files = pdf.Root["/Names"]["/EmbeddedFiles"]
+        if "/Names" not in embedded_files:
+            embedded_files["/Names"] = []
         
         # Add the filespec to the Names array
-        embedded_files.Names.append(Name("factur-x.xml"))
-        embedded_files.Names.append(pdf.make_indirect(filespec))
+        names_array = embedded_files["/Names"]
+        names_array.append(Name("/factur-x.xml"))
+        names_array.append(pdf.make_indirect(filespec))
         
         # Add PDF/A and Factur-X metadata
         with pdf.open_metadata() as meta:
