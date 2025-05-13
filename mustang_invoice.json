@@ -1,0 +1,68 @@
+{
+  "invoice": {
+    "number": "INV-2025-1175",
+    "date": "2025-05-13",
+    "dueDate": "2025-06-12",
+    "currency": "EUR",
+    "comment": "Thank you for your business!",
+    "profile": "EN16931"
+  },
+  "seller": {
+    "name": "TechSolutions SAS",
+    "address": "123 Avenue des Champs-Élysées",
+    "zip": "75008",
+    "city": "Paris",
+    "country": "FR",
+    "taxID": "FR12345678901",
+    "email": "billing@techsolutions.fr",
+    "phone": "+33123456789"
+  },
+  "buyer": {
+    "name": "Acme Corporation",
+    "address": "27 Rue du Faubourg Saint-Honoré",
+    "zip": "75008",
+    "city": "Paris",
+    "country": "FR",
+    "taxID": "FR98765432109",
+    "email": "invoices@acme.fr"
+  },
+  "delivery": {
+    "date": "2025-05-13"
+  },
+  "items": [
+    {
+      "name": "Software License",
+      "quantity": 2,
+      "unit": "pcs",
+      "unitPrice": 1000.00,
+      "vatPercent": 20.00,
+      "note": "Annual subscription"
+    },
+    {
+      "name": "Consulting Services",
+      "quantity": 5,
+      "unit": "hour",
+      "unitPrice": 150.00,
+      "vatPercent": 20.00,
+      "note": "Implementation support"
+    },
+    {
+      "name": "Server Hosting",
+      "quantity": 1,
+      "unit": "month",
+      "unitPrice": 300.00,
+      "vatPercent": 20.00,
+      "note": "Cloud infrastructure"
+    }
+  ],
+  "totals": {
+    "netAmount": 3050.00,
+    "vatAmount": 610.00,
+    "grandTotal": 3660.00
+  },
+  "payment": {
+    "iban": "FR7630006000011234567890189",
+    "bic": "AGRIFRPP",
+    "reference": "INV-2025-1175"
+  }
+}

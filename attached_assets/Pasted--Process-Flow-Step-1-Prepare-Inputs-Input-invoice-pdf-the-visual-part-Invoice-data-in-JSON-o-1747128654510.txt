@@ -1,0 +1,83 @@
+🚀 Process Flow
+Step 1: Prepare Inputs
+Input: invoice.pdf (the visual part)
+
+Invoice data (in JSON or manually defined)
+
+Mustangproject-generated factur-x.xml
+
+Step 2: Generate EN16931 XML (Factur-X)
+You need the Mustangproject JAR. Add this to Replit or upload manually.
+
+bash
+Copy
+Edit
+# Download Mustangproject CLI tool
+wget https://github.com/ZUGFeRD/mustangproject/releases/download/2.6.1/mustangcli.jar
+Then create a invoice.json or fill the data inline.
+
+Run:
+
+bash
+Copy
+Edit
+java -jar mustangcli.jar -j invoice.json -o factur-x.xml
+Step 3: Convert PDF to PDF/A-3B (if not already)
+If your PDF is not already PDF/A-3B:
+
+bash
+Copy
+Edit
+gs -dPDFA=3 -dBATCH -dNOPAUSE -dNOOUTERSAVE -sProcessColorModel=DeviceRGB \
+   -sDEVICE=pdfwrite -sPDFACompatibilityPolicy=1 \
+   -sOutputFile=output.pdf input.pdf
+(You can skip this if using a compliant base template or pre-validated layout)
+
+Step 4: Embed XML in PDF using Python
+python
+Copy
+Edit
+# Replit: create main.py
+import pikepdf
+from pikepdf import Name, Dictionary, Array, Stream
+
+# Load the base PDF
+pdf = pikepdf.open("output.pdf")
+
+# Read the XML file
+with open("factur-x.xml", "rb") as f:
+    xml_data = f.read()
+
+# Embed the XML
+af_file = pdf.make_stream(xml_data)
+af_file.Type = Name.EmbeddedFile
+af_file.Subtype = Name("application/xml")
+
+embedded_file = Dictionary({
+    Name.Type: Name.Filespec,
+    Name.F: "factur-x.xml",
+    Name.UF: "factur-x.xml",
+    Name.AFRelationship: Name.Data,
+    Name.Desc: "Factur-X Invoice Data",
+    Name.EF: Dictionary({Name.F: af_file}),
+})
+
+# Add to root catalog
+pdf.Root.setdefault(Name.AF, Array()).append(embedded_file)
+
+# Metadata
+pdf.Root.Metadata = pdf.make_stream(b"<rdf:Description xmlns:pdfaExtension=...>")  # Replace with real RDF
+pdf.save("facturx_invoice.pdf")
+You can enrich the XMP metadata to include:
+
+xml
+Copy
+Edit
+<pdfaExtension:schemas>
+  <pdfaExtension:schema>
+    <pdfaExtension:schema>Factur-X</pdfaExtension:schema>
+    <pdfaExtension:namespaceURI>urn:factur-x:en16931:2017:compliant</pdfaExtension:namespaceURI>
+    <pdfaExtension:prefix>fx</pdfaExtension:prefix>
+    ...
+  </pdfaExtension:schema>
+</pdfaExtension:schemas>
