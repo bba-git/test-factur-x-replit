@@ -1,7 +1,7 @@
 import os
 from lxml import etree
 
-SCHEMA_FILE = "src/schemas/Factur-X.xsd"
+SCHEMA_FILE = "schemas/Factur-X_1.07.3_EN16931.xsd"
 
 def validate_facturx(xml_string):
     xml_doc = etree.fromstring(xml_string.encode("utf-8"))

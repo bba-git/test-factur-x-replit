@@ -78,6 +78,7 @@
                 <ram:TaxBasisTotalAmount>100.00</ram:TaxBasisTotalAmount>
                 <ram:TaxTotalAmount currencyID="EUR">20.00</ram:TaxTotalAmount>
                 <ram:GrandTotalAmount>120.00</ram:GrandTotalAmount>
+                <ram:DuePayableAmount>120.00</ram:DuePayableAmount>
             </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
         </ram:ApplicableHeaderTradeSettlement>
     </rsm:SupplyChainTradeTransaction>
