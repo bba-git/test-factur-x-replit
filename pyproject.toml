@@ -9,3 +9,6 @@ dependencies = [
     "pikepdf>=9.7.0",
     "reportlab>=4.4.0",
 ]
+
+[tool.poetry.dependencies]
+factur-x = ">=1.4.1,<2.0.0"

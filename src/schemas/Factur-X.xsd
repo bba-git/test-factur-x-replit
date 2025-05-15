@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="de-de">
+<head>
+
+<meta charset="utf-8">
+<!-- 
+	This website is powered by TYPO3 - inspiring people to share!
+	TYPO3 is a free open source Content Management Framework initially created by Kasper Skaarhoj and licensed under GNU/GPL.
+	TYPO3 is copyright 1998-2025 of Kasper Skaarhoj. Extensions are copyright of their respective owners.
+	Information and contribution at https://typo3.org/
+-->
+
+
+<link rel="icon" href="/favicon_ferd.svg" type="image/svg+xml">
+<title>404</title>
+<meta name="generator" content="TYPO3 CMS" />
+<meta name="robots" content="index,follow" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="twitter:card" content="summary" />
+<meta name="web_author" content="Die Medialen GmbH" />
+
+
+<link rel="stylesheet" href="/typo3temp/assets/compressed/merged-3de4665f37ef381f4c2e49f5f72392ed-a2d1bdf0bf9c7db44df40b27aea255f2.css?1736424078" media="all">
+
+
+<script src="/typo3conf/ext/awv_sitepackage/Resources/Public/JS/jquery-3.6.1.min.js?1675157435"></script>
+
+
+
+<link rel="canonical" href="https://www.ferd-net.de/404"/>
+
+<link rel="alternate" hreflang="de-de" href="https://www.ferd-net.de/404"/>
+<link rel="alternate" hreflang="en-US" href="https://www.ferd-net.de/en/404"/>
+<link rel="alternate" hreflang="x-default" href="https://www.ferd-net.de/404"/>
+</head>
+<body>
+	<!-- header with nav -->
+    <header class="h-14 md:h-27 w-full bg-white border-b border-black-200 fixed z-50 top-0 left-0 flex items-center">
+		<div class="container flex justify-between items-end w-full">
+		  <div class="flex items-end">
+			
+					<a href="/"><img class="xl:hidden h-8 md:h-20 w-auto shrink-0" alt="FeRD-Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/FeRD_Logo.png" width="401" height="146" /></a>
+					<a href="/"><img class="hidden xl:block h-20 w-auto shrink-0" alt="FeRD-Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/FeRD_Logo-unterzeile.svg" width="310" height="44" /></a>
+				
+		  </div>
+		  <div class="flex items-end gap-4 md:gap-8">
+			<div>
+  
+    
+      <a class="active-element border-r-2 border-black-400 pr-1 text-black-400 font-semibold hover:text-black-900 active-element:text-black-900 hover:underline active-element:underline"
+        href="/404">DE</a>
+    
+      <a class="text-black-400 font-semibold hover:text-black-900 active-element:text-black-900 hover:underline active-element:underline"
+        href="/en/404">EN</a>
+    
+  
+</div>
+<a class="flex flex-col items-center gap-2 cursor-pointer mdmax:w-8" href="/suche">
+  <img class="w-7 shrink-0" alt="Suche" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/suche.svg" width="27" height="25" />
+  <p class="hidden md:block mb-0 text-sm font-semibold">
+    Suche
+  </p>
+</a>
+<a class="flex flex-col items-center gap-2 mdmax:w-8" target="_blank" href="https://forum.awv-net.de/forum">
+  <img class="cursor-pointer w-7 shrink-0" alt="AWV-Forum" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/user.svg" width="27" height="27" />
+  <p class="mb-0 text-sm font-semibold hidden md:block">
+    AWV-Forum
+  </p>
+</a>
+<button class="flex flex-col items-center gap-2 cursor-pointer group" data-toggle-burger-menu>
+  <img data-close-burger-menu="" class="hidden w-9" alt="Menü schließen" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/close-menu.svg" width="34" height="21" />
+  <span class="w-9 -ml-1.5 flex flex-col gap-1" data-burger-menu>
+    <span class="w-7 h-1 bg-turquoise-300 group-hover:ml-2 transition-all duration-300"></span>
+    <span class="w-9 h-1 bg-blue"></span>
+    <span class="w-7 h-1 bg-blue-800 group-hover:ml-2 transition-all duration-300"></span>
+  </span>
+  <span class="hidden md:block mb-0 text-sm font-semibold">
+    Menü
+  </span>
+</button>
+		  </div>
+		</div>
+	  </header>
+	  <nav
+  class="hidden w-full bg-black-800 fixed inset-0 z-40 h-full max-h-max overflow-auto"
+  data-main-menu
+  aria-label="Menü"
+>
+    <div class="pt-27 xl:pt-36 pb-12 bg-white">
+        <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-8 container">
+            <!-- first level -->
+            
+                <ul class="text-base text-blue-800 hover:text-black col-span-1 ">
+                    <li class="group flex flex-col gap-3" data-menu-first-level>
+                        
+                                
+                                        <div class="border-b-2 border-blue-800 mr-2 mb-4">
+    <div class="flex gap-1 justify-between">
+        <a href="/ueber-uns" class="font-semibold ml-2 ">Über uns </a>
+        <button
+            class="flex xl:hidden justify-center items-center w-9 group-expanded:hidden"
+            data-first-level-button-closed
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="open second level" class="text-blue-800 w-4 h-auto cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+        <button
+            class="justify-center items-center w-9 hidden group-expanded:flex xl:hidden"
+            data-first-level-button-open
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="close second level" class="text-blue-800 w-4 h-auto rotate-180 cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+    </div>
+</div>
+    <!-- second level -->
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ferd-und-competence-center" class="font-semibold flex items-center ml-2 ">FeRD und Competence Center </a>
+                            <button class="flex justify-center items-center w-9 shrink-0" data-second-level-button-closed>
+                                <svg viewBox="0 0 15.546 9.187" aria-label="open third level" class="text-blue w-4 h-auto cursor-pointer">
+                                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                                </svg>
+                            </button>
+                            <button class="hidden flex justify-center items-center w-9 shrink-0" data-second-level-button-open>
+                                <svg viewBox="0 0 15.546 9.187" aria-label="close third level" class="text-blue w-4 h-auto rotate-180 cursor-pointer">
+                                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                                </svg>
+                            </button>
+                        </div>
+                            <!-- third level -->
+                            <ul class="hidden flex flex-col bg-blue-100 text-sm text-blue gap-4 p-2 mt-2 mr-2 mb-2" data-menu-third-level>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/ueber-uns/ferd-und-competence-center/cc3" class="font-semibold hover:text-blue-800 ">CC1 </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/ueber-uns/ferd-und-competence-center/cc2" class="font-semibold hover:text-blue-800 ">CC2 </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/ueber-uns/ferd-und-competence-center/cc1" class="font-semibold hover:text-blue-800 ">CC3 </a>
+                                    </li>
+                                
+                            </ul>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ferd-und-competence-center/ferd-mitglieder" class="font-semibold flex items-center ml-2 mr-10.5 ">FeRD Mitglieder </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ferd-und-competence-center/europaeische-vernetzung/standard-titel" class="font-semibold flex items-center ml-2 mr-10.5 ">Deutsch-Französische Partnerschaft </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ferd-und-competence-center/mitwirken-im-ferd" class="font-semibold flex items-center ml-2 mr-10.5 ">Mitwirken im FeRD </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ferd-und-competence-center/ansprechpersonen" class="font-semibold flex items-center ml-2 mr-10.5 ">Ansprechpersonen </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+
+                                    
+                            
+                    </li>
+                </ul>
+            
+                <ul class="text-base text-blue-800 hover:text-black col-span-1 ">
+                    <li class="group flex flex-col gap-3" data-menu-first-level>
+                        
+                                
+                                        <div class="border-b-2 border-blue-800 mr-2 mb-4">
+    <div class="flex gap-1 justify-between">
+        <a href="/aktuelles" class="font-semibold ml-2 ">Aktuelles </a>
+        <button
+            class="flex xl:hidden justify-center items-center w-9 group-expanded:hidden"
+            data-first-level-button-closed
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="open second level" class="text-blue-800 w-4 h-auto cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+        <button
+            class="justify-center items-center w-9 hidden group-expanded:flex xl:hidden"
+            data-first-level-button-open
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="close second level" class="text-blue-800 w-4 h-auto rotate-180 cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+    </div>
+</div>
+    <!-- second level -->
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/aktuelles/gesetzliche-rahmenbedingungen" class="font-semibold flex items-center ml-2 mr-10.5 ">Rechtliche Rahmenbedingungen </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/aktuelles-veranstaltungen/veranstaltungen" class="font-semibold flex items-center ml-2 mr-10.5 ">Veranstaltungen </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/aktuelles/meldungen" class="font-semibold flex items-center ml-2 mr-10.5 ">Meldungen </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/aktuelles/newsletter" class="font-semibold flex items-center ml-2 mr-10.5 ">Newsletter </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+
+                                    
+                            
+                    </li>
+                </ul>
+            
+                <ul class="text-base text-blue-800 hover:text-black col-span-1 ">
+                    <li class="group flex flex-col gap-3" data-menu-first-level>
+                        
+                                
+                                        <div class="border-b-2 border-blue-800 mr-2 mb-4">
+    <div class="flex gap-1 justify-between">
+        <a href="/standards" class="font-semibold ml-2 ">Standards und FAQs </a>
+        <button
+            class="flex xl:hidden justify-center items-center w-9 group-expanded:hidden"
+            data-first-level-button-closed
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="open second level" class="text-blue-800 w-4 h-auto cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+        <button
+            class="justify-center items-center w-9 hidden group-expanded:flex xl:hidden"
+            data-first-level-button-open
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="close second level" class="text-blue-800 w-4 h-auto rotate-180 cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+    </div>
+</div>
+    <!-- second level -->
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/standards/order-x" class="font-semibold flex items-center ml-2 mr-10.5 ">Order-X </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/standards/zugferd" class="font-semibold flex items-center ml-2 mr-10.5 ">ZUGFeRD/Factur-X </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/faqs" class="font-semibold flex items-center ml-2 ">FAQs </a>
+                            <button class="flex justify-center items-center w-9 shrink-0" data-second-level-button-closed>
+                                <svg viewBox="0 0 15.546 9.187" aria-label="open third level" class="text-blue w-4 h-auto cursor-pointer">
+                                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                                </svg>
+                            </button>
+                            <button class="hidden flex justify-center items-center w-9 shrink-0" data-second-level-button-open>
+                                <svg viewBox="0 0 15.546 9.187" aria-label="close third level" class="text-blue w-4 h-auto rotate-180 cursor-pointer">
+                                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                                </svg>
+                            </button>
+                        </div>
+                            <!-- third level -->
+                            <ul class="hidden flex flex-col bg-blue-100 text-sm text-blue gap-4 p-2 mt-2 mr-2 mb-2" data-menu-third-level>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/faqs/allgemeine-fragen-zur-erechnung" class="font-semibold hover:text-blue-800 ">Allgemeines zur E-Rechnung </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/faqs/fragen-zur-erechnung-im-b2b-bereich" class="font-semibold hover:text-blue-800 ">Zum B2B-Bereich </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/faqs/fragen-zur-erechnung-im-b2g-bereich" class="font-semibold hover:text-blue-800 ">Zum B2G-Bereich </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/faqs/technisches-zur-e-rechnung" class="font-semibold hover:text-blue-800 ">Technisches zur E-Rechnung </a>
+                                    </li>
+                                
+                                    <li class="flex gap-1 justify-between">
+                                        <a href="/standards/zugferd-faq" class="font-semibold hover:text-blue-800 ">Zu ZUGFeRD </a>
+                                    </li>
+                                
+                            </ul>
+                    
+
+            </li>
+        </ul>
+    
+
+                                    
+                            
+                    </li>
+                </ul>
+            
+                <ul class="text-base text-blue-800 hover:text-black col-span-1 ">
+                    <li class="group flex flex-col gap-3" data-menu-first-level>
+                        
+                                
+                                        <div class="border-b-2 border-blue-800 mr-2 mb-4">
+    <div class="flex gap-1 justify-between">
+        <a href="/ressourcen" class="font-semibold ml-2 ">Downloads </a>
+        <button
+            class="flex xl:hidden justify-center items-center w-9 group-expanded:hidden"
+            data-first-level-button-closed
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="open second level" class="text-blue-800 w-4 h-auto cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+        <button
+            class="justify-center items-center w-9 hidden group-expanded:flex xl:hidden"
+            data-first-level-button-open
+        >
+            <svg viewBox="0 0 15.546 9.187" aria-label="close second level" class="text-blue-800 w-4 h-auto rotate-180 cursor-pointer">
+            <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+            </svg>
+        </button>
+    </div>
+</div>
+    <!-- second level -->
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ueber-uns/ressourcen-1/veroeffentlichungen" class="font-semibold flex items-center ml-2 mr-10.5 ">Veröffentlichungen </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+        <ul class="text-sm text-blue hover:text-blue-800 gap-4 hidden group-expanded:flex flex-col" data-menu-second-level>
+            <li class="inline">
+                
+                        <div class="flex gap-1 justify-between mr-2">
+                            <a href="/ressourcen/zugferd-logo" class="font-semibold flex items-center ml-2 mr-10.5 ">ZUGFeRD-Logo </a>
+                        </div>
+                    
+
+            </li>
+        </ul>
+    
+
+                                    
+                            
+                    </li>
+                </ul>
+            
+        </div>
+    </div>
+    <div class="bg-black-100 w-full">
+        <div class="container">
+          <p class="md:hidden mb-0 uppercase font-semibold text-sm col-span-12 pb-4 pt-8 md:w-max">Direkt zu</p>
+          <div class="flex gap-4 xs:gap-8 sm:gap-16 items-center pb-8 md:py-6">
+            <p class="hidden md:flex mb-0 uppercase font-semibold text-sm md:h-10 items-center justify-center">Direkt zu</p>
+            
+                    <a target="_blank" href="https://www.awv-net.de/"><img class="h-7 sm:h-10 w-auto" alt="AWV Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/AWV_Logo.svg" width="150" height="60" /></a>
+                    <a target="_blank" href="https://www.extra-standard.de/"><img class="h-7 sm:h-10 w-auto" alt="Extra Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/extra-logo.svg" width="113" height="37" /></a>
+                    <a target="_blank" href="https://forum.awv-net.de/forum"><img class="h-7 sm:h-10 w-auto" alt="AWV Forum Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/AWV_FORUM_Logo.svg" width="169" height="54" /></a>
+                
+
+          </div>
+        </div>
+      </div>
+</nav>
+	  <!-- sidenav -->
+<div class="fixed top-36 right-0 z-30 hidden md:flex justify-end h-full w-0">
+    <div class="translate-x-closed transition-all duration-300 h-max" data-sidenav>
+        <div class="flex">
+            <div class="flex flex-col">
+                
+                    <button class="w-16 h-16 bg-turquoise-300 flex justify-center items-center border-t-2 border-l-2 border-r-2 border-white " data-sidenav-button>
+                        <img class="w-12 h-auto" alt="Newsletter" src="/fileadmin/user_upload/Icons/Newsletter_hover.svg" width="46" height="38" />
+                    </button>
+                
+                    <button class="w-16 h-16 bg-blue flex justify-center items-center border-t-2 border-l-2 border-r-2 border-white " data-sidenav-button>
+                        <img class="w-12 h-auto" alt="Newsletter" src="/fileadmin/user_upload/Icons/Mitarbeit_02.svg" width="400" height="400" />
+                    </button>
+                
+                    <button class="w-16 h-16 bg-blue-800 flex justify-center items-center border-t-2 border-l-2 border-r-2 border-white border-b-2" data-sidenav-button>
+                        <img class="w-12 h-auto" alt="Newsletter" src="/fileadmin/user_upload/Icons/Cloud_Download.svg" width="399" height="400" />
+                    </button>
+                
+            </div>
+            
+                <div class=" w-108 bg-white pt-10 pb-10 pl-10 flex items-start shadow-2xl" data-sidenav-content>
+                    <div class="w-80">
+                        <h2 class="text-xl font-bold mb-3">Bleiben Sie informiert!</h2>
+                        <div class="mb-3"><p>Erfahren Sie Neuigkeiten über Fachthemen und Veranstaltungen.</p></div>
+                        <a href="/aktuelles/newsletter" class="flex gap-2 text-base text-blue hover:text-blue-800 font-semibold group">zum Newsletter anmelden 
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 shrink-0">                            
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 -ml-4 opacity-0 group-hover:opacity-100 transition-all duration-300 shrink-0">
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                        </a>
+                    </div>
+                    <button class="w-12 h-auto ml-1">
+                        <img src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/close-menu.svg" alt="Menü schließen" class="2xl:hidden" data-close-sidenav />
+                    </button>
+                </div>
+            
+                <div class="hidden w-108 bg-white pt-10 pb-10 pl-10 flex items-start shadow-2xl" data-sidenav-content>
+                    <div class="w-80">
+                        <h2 class="text-xl font-bold mb-3">Seien Sie dabei!</h2>
+                        <div class="mb-3"><p>Ihnen gefällt, wofür sich das Forum elektronische Rechnung Deutschland einsetzt?</p></div>
+                        <a href="/ueber-uns/ferd-und-competence-center/mitwirken-im-ferd" class="flex gap-2 text-base text-blue hover:text-blue-800 font-semibold group">mitwirken und vernetzen 
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 shrink-0">                            
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 -ml-4 opacity-0 group-hover:opacity-100 transition-all duration-300 shrink-0">
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                        </a>
+                    </div>
+                    <button class="w-12 h-auto ml-1">
+                        <img src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/close-menu.svg" alt="Menü schließen" class="2xl:hidden" data-close-sidenav />
+                    </button>
+                </div>
+            
+                <div class="hidden w-108 bg-white pt-10 pb-10 pl-10 flex items-start shadow-2xl" data-sidenav-content>
+                    <div class="w-80">
+                        <h2 class="text-xl font-bold mb-3">Erfahren Sie mehr!</h2>
+                        <div class="mb-3"><p>Wir entwickeln Lösungen für die gesamte supply chain.</p></div>
+                        <a href="/standards" class="flex gap-2 text-base text-blue hover:text-blue-800 font-semibold group">direkt zu unseren Standards 
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 shrink-0">                            
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                            <svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-blue group-hover:text-blue-800 w-4 h-auto cursor-pointer -rotate-90 -ml-4 opacity-0 group-hover:opacity-100 transition-all duration-300 shrink-0">
+                                <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                            </svg>
+                        </a>
+                    </div>
+                    <button class="w-12 h-auto ml-1">
+                        <img src="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/close-menu.svg" alt="Menü schließen" class="2xl:hidden" data-close-sidenav />
+                    </button>
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+	<!-- header slider -->
+	<section class="section section-full">
+		<div class="w-full">
+			
+		</div>
+	</section>
+	<nav class="section my-2 xl:my-3">
+		<ul class="container flex flex-wrap gap-y-2 gap-x-4">
+    
+        
+                <li class="relative text-xs xl:text-sm text-blue">
+                    <a
+                        href="/"
+                        class="font-semibold after:bg-blue after:absolute after:top-2.5 after:-right-2.5 after:w-1 after:h-1 after:border after:border-blue after:rounded"
+                        >FeRD</a
+                    >
+                </li>
+            
+    
+        
+                <li class="text-xs xl:text-sm font-semibold">404</li>
+            
+    
+</ul>
+  
+	</nav>
+	
+			<main class="relative mt-14 xl:mt-20">
+				<section
+    class="section section-narrow mb-14 xl:mb-20 frame-layout-0 frame-space-after-">
+    <div class="container">
+        
+            <div>
+                
+                    
+    
+
+            <div id="c2161" class="frame frame-default frame-type-textmedia frame-layout-0">
+                
+                
+                    
+
+
+
+                
+                
+
+    
+        
+
+    
+
+
+
+    
+
+
+                
+
+    <div class="ce-textpic ce-center ce-above">
+        
+            
+
+
+
+        
+
+        
+                <div class="ce-bodytext">
+                    
+                    <p>Fehler 404 – Seite nicht gefunden</p>
+                </div>
+            
+
+        
+    </div>
+
+
+                
+                    
+
+
+
+                
+                
+                    
+
+
+
+                
+            </div>
+
+        
+
+
+                
+            </div>
+        
+        
+    </div>
+</section>
+			</main>
+		
+			
+
+
+	<!-- scroll to top Button -->
+	<div
+	id="scroll-to-top-button"
+	class="group fixed bottom-2 right-2 opacity-0 pointer-events-none translate-y-28 z-30 flex gap-2 items-center 2xlmax:bg-white mb-8"
+	>
+	<p class="mb-0 text-blue group-hover:text-blue-800 text-sm font-semibold pl-1">Nach oben</p>
+	<button class="bg-blue group-hover:bg-blue-800 w-10 h-10 flex flex-col items-center justify-center">
+		<svg viewBox="0 0 15.546 9.187" aria-label="closed" class="text-white w-3 h-auto cursor-pointer rotate-180">
+			<use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+		</svg>
+		<svg viewBox="0 0 15.546 9.187"	aria-label="closed"	class="text-white w-3 h-auto cursor-pointer rotate-180 opacity-0 group-hover:opacity-100 -mt-0.5 transition-all duration-300">
+			<use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+	  </svg>
+	</button>
+	</div>
+
+	<!-- Footer -->
+	<footer class="w-full bg-black-100">
+		<div class="section container grid grid-cols-1 xl:grid-cols-12">
+			
+					<a class="max-h-72 w-auto xl:col-span-5" href="https://www.awv-net.de/"><img class="max-h-72 w-auto xl:col-span-5" alt="Footer Logo" src="/typo3conf/ext/awv_sitepackage/Resources/Public/Images/footer_logo.svg" width="583" height="291" /></a>
+				
+			<div class="grid grid-cols-1 xs:grid-cols-2 my-9 2xl:my-14 justify-between xl:col-span-7 2xl:ml-48 gap-y-8 xs:gap-4">
+				<!-- menu block 1 -->
+<div>
+    <h2 class="text-base uppercase xl:text-2lg font-semibold mb-5">Service</h2>
+    <ul class="flex flex-col gap-3">
+        
+            <li>
+                <a href="/kontakt" class="font-semibold flex items-center gap-2 group"
+                >Kontakt
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+            <li>
+                <a href="/impressum" class="font-semibold flex items-center gap-2 group"
+                >Impressum
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+            <li>
+                <a href="/datenschutz" class="font-semibold flex items-center gap-2 group"
+                >Datenschutz
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+            <li>
+                <a href="/barrierefreiheit" class="font-semibold flex items-center gap-2 group"
+                >Barrierefreiheit
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+
+    </ul>
+</div>
+<!-- menu block 2 -->
+<div>
+    <h2 class="text-base uppercase xl:text-2lg font-semibold mb-5">Direkt zu</h2>
+    <ul class="flex flex-col gap-3">
+        
+            <li>
+                <a href="/default-262395aed0a326a45c94e3d0ce24416f" class="font-semibold flex items-center gap-2 group"
+                >Download Order-X
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+            <li>
+                <a href="/download-zugferd" class="font-semibold flex items-center gap-2 group"
+                >Download ZUGFeRD
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+            <li>
+                <a href="/aktuelles/newsletter" class="font-semibold flex items-center gap-2 group"
+                >FeRD Newsletter
+                <div class="flex">
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                    <svg
+                    viewBox="0 0 15.546 9.187"
+                    aria-label="closed"
+                    class="text-black-900 w-3 h-auto cursor-pointer -rotate-90 -ml-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                    <use href="/typo3conf/ext/awv_sitepackage/Resources/Public/Icons/arrow-editable.svg#arrow-editable" />
+                    </svg>
+                </div>
+                </a>
+            </li>
+        
+    </ul>
+</div>
+			</div>
+		</div>
+	<!-- padding bottom for scroll-to-top-button -->
+	<div class="bg-white text-black-400 pt-1 px-1 pb-14 xl:pt-2 xl:px-2">
+		<p class="section container mb-0 text-tiny text-right"><a class="pr-5" onclick="resetCC()" href="javascript:void(0);">Cookie-Einwilligungen widerrufen</a> &copy; 2025 AWV e.V.</p>
+	</div>
+	</footer>
+
+<script src="/typo3temp/assets/compressed/merged-68935e04659fb3d3301170d9ef15ffd9-1edb5a2515e83c150ce7f35e809458fd.js?1736938128"></script>
+
+
+</body>
+</html>

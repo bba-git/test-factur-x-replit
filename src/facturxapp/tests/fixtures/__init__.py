@@ -1,0 +1,1 @@
+"""Test fixtures for Factur-X XML generation.""" 
