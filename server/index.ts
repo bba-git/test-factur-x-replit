@@ -8,6 +8,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import customersRouter from './routes/customers';
 import invoicesRouter from './routes/invoices';
+import authRouter from './routes/auth';
 
 const app = express();
 
@@ -25,6 +26,7 @@ console.log(`[BOOT] Starting backend in ${app.get('env')} mode on port ${startPo
 
 console.log('[BOOT] Registering route: /api');
 app.use('/api', routes);
+app.use('/api/auth', authRouter);
 app.use('/api/company-profiles', companyProfilesRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/invoices', invoicesRouter);

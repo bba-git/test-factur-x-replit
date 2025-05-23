@@ -50,18 +50,27 @@ export const apiRequest = async (method: string, endpoint: string, data?: any) =
   }
 };
 
-type UnauthorizedBehavior = "returnNull" | "throw";
+type UnauthorizedBehavior = "returnNull" | "throw" | "redirect";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const url = typeof queryKey[0] === 'string' ? queryKey[0] : `${API_URL}${queryKey[0]}`;
+    const res = await fetch(url, {
       credentials: "include",
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      } else if (unauthorizedBehavior === "redirect") {
+        window.location.href = '/login';
+        return null;
+      }
     }
 
     await throwIfResNotOk(res);
@@ -71,7 +80,7 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getQueryFn({ on401: "redirect" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
