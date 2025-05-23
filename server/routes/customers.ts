@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase } from '../supabaseClient';
+import { insertAndReturn } from '../utils/supabase/insertAndReturn';
 
 interface CustomerDB {
   id: string;
@@ -60,20 +61,13 @@ router.post('/', async (req, res) => {
 
   try {
     console.log('Attempting Supabase insert...');
-    const { data, error } = await supabase
-      .from('customers')
-      .insert([transformedData])
-      .select('*')
-      .single();
+    const { data, error } = await insertAndReturn<CustomerDB>(supabase, 'customers', transformedData);
 
     console.log('Supabase response:', { data, error });
 
     if (error) {
       console.error('Supabase error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
+        message: error.message
       });
       return res.status(500).json({ message: error.message });
     }
