@@ -1,11 +1,42 @@
 import express from 'express';
 import { supabase } from '../supabaseClient';
+import { getAuthenticatedUser } from '../middleware/getAuthenticatedUser';
+import { insertAndReturn } from '../utils/supabase/insertAndReturn';
+
+interface InvoiceDB {
+  id: string;
+  invoice_number: string;
+  customer_id: string;
+  company_profile_id: string;
+  issue_date: string;
+  due_date: string;
+  currency: string;
+  subtotal: number;
+  vat_total: number;
+  total: number;
+  notes: string | null;
+  payment_terms: string | null;
+  purchase_order_ref: string | null;
+  status: string;
+  profile: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
 
 const router = express.Router();
 
-// Get all invoices
-router.get('/', async (_req, res) => {
-  const { data, error } = await supabase.from('invoices').select('*');
+// Apply authentication middleware to all routes
+router.use(getAuthenticatedUser);
+
+// Get all invoices for the company
+router.get('/', async (req, res) => {
+  const { companyProfileId } = req.context!;
+  
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('company_profile_id', companyProfileId);
+
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
@@ -20,11 +51,25 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Request body is required' });
     }
 
+    const { companyProfileId } = req.context!;
+
+    // Validate customer belongs to the same company
+    const { data: customer, error: customerError } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('id', req.body.customer_id || req.body.customerId)
+      .eq('company_profile_id', companyProfileId)
+      .single();
+
+    if (customerError || !customer) {
+      return res.status(400).json({ message: 'Invalid customer or customer does not belong to your company' });
+    }
+
     // Convert camelCase to snake_case and ensure all required fields are present
     const invoiceData = {
       invoice_number: req.body.invoice_number || req.body.invoiceNumber,
       customer_id: req.body.customer_id || req.body.customerId,
-      company_profile_id: req.body.company_profile_id || req.body.companyProfileId,
+      company_profile_id: companyProfileId, // Use authenticated user's company
       issue_date: req.body.issue_date || req.body.issueDate,
       due_date: req.body.due_date || req.body.dueDate,
       currency: req.body.currency,
@@ -42,11 +87,8 @@ router.post('/', async (req, res) => {
     if (!invoiceData.invoice_number) {
       return res.status(400).json({ message: 'Invoice number is required' });
     }
-    if (!invoiceData.customer_id || invoiceData.customer_id <= 0) {
+    if (!invoiceData.customer_id) {
       return res.status(400).json({ message: 'A valid customer must be selected' });
-    }
-    if (!invoiceData.company_profile_id) {
-      return res.status(400).json({ message: 'Company profile ID is required' });
     }
     if (!invoiceData.issue_date) {
       return res.status(400).json({ message: 'Issue date is required' });
@@ -57,11 +99,7 @@ router.post('/', async (req, res) => {
 
     console.log('[API] Inserting invoice data:', invoiceData);
 
-    const { data, error } = await supabase
-      .from('invoices')
-      .insert([invoiceData])
-      .select()
-      .single();
+    const { data, error } = await insertAndReturn<InvoiceDB>(supabase, 'invoices', invoiceData);
 
     if (error) {
       console.error('[API] Supabase error:', error);
