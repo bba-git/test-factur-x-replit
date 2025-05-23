@@ -55,6 +55,14 @@ router.post('/', async (req, res) => {
   
   const { companyProfileId } = req.context!;
   
+  // Validate company context
+  if (!companyProfileId) {
+    console.error('[ERROR] Missing company context in request');
+    return res.status(403).json({ message: 'Company context missing' });
+  }
+  
+  console.log('[DEBUG] Authenticated user company:', companyProfileId);
+  
   // Keep snake_case for database
   const transformedData = {
     name: req.body.name,
@@ -69,7 +77,7 @@ router.post('/', async (req, res) => {
     company_profile_id: companyProfileId // Use the authenticated user's company
   };
 
-  console.log('Transformed data before Supabase:', JSON.stringify(transformedData, null, 2));
+  console.log('[DEBUG] Final customer payload:', JSON.stringify(transformedData, null, 2));
 
   try {
     console.log('Attempting Supabase insert...');
