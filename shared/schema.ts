@@ -20,12 +20,12 @@ export type User = typeof users.$inferSelect;
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  vatNumber: text("vat_number"),
+  vat_number: text("vat_number"),
   address: text("address").notNull(),
   city: text("city").notNull(),
-  postalCode: text("postal_code").notNull(),
+  postal_code: text("postal_code").notNull(),
   country: text("country").notNull(),
-  contactPerson: text("contact_person"),
+  contact_person: text("contact_person"),
   email: text("email"),
   phone: text("phone"),
 });
@@ -41,22 +41,34 @@ export type Customer = typeof customers.$inferSelect;
 export const companyProfiles = pgTable("company_profiles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  vatNumber: text("vat_number").notNull(),
+  vat_number: text("vat_number").notNull(),
   address: text("address").notNull(),
   city: text("city").notNull(),
-  postalCode: text("postal_code").notNull(),
+  postal_code: text("postal_code").notNull(),
   country: text("country").notNull(),
-  contactPerson: text("contact_person"),
+  contact_person: text("contact_person"),
   email: text("email"),
   phone: text("phone"),
-  bankAccount: text("bank_account"),
-  bankName: text("bank_name"),
+  bank_account: text("bank_account"),
+  bank_name: text("bank_name"),
   iban: text("iban"),
   bic: text("bic"),
 });
 
-export const insertCompanyProfileSchema = createInsertSchema(companyProfiles).omit({
-  id: true,
+export const insertCompanyProfileSchema = z.object({
+  name: z.string().min(1, "Company name is required"),
+  vat_number: z.string().min(1, "VAT number is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  postal_code: z.string().min(1, "Postal code is required"),
+  country: z.string().min(1, "Country is required"),
+  contact_person: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  bank_account: z.string().optional(),
+  bank_name: z.string().optional(),
+  iban: z.string().optional(),
+  bic: z.string().optional(),
 });
 
 export type InsertCompanyProfile = z.infer<typeof insertCompanyProfileSchema>;
@@ -67,9 +79,9 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  unitPrice: real("unit_price").notNull(),
-  vatRate: real("vat_rate").notNull(),
-  unitOfMeasure: text("unit_of_measure").notNull(),
+  unit_price: real("unit_price").notNull(),
+  vat_rate: real("vat_rate").notNull(),
+  unit_of_measure: text("unit_of_measure").notNull(),
   sku: text("sku"),
 });
 
@@ -93,60 +105,65 @@ export const ValidationStatusEnum = z.enum(["VALID", "INVALID", "PENDING"]);
 export type ValidationStatus = z.infer<typeof ValidationStatusEnum>;
 
 // Invoice line items schema
-export const invoiceItems = pgTable("invoice_items", {
+export const invoice_items = pgTable("invoice_items", {
   id: serial("id").primaryKey(),
-  invoiceId: integer("invoice_id").notNull(),
-  productId: integer("product_id"),
+  invoice_id: integer("invoice_id").notNull(),
+  product_id: integer("product_id"),
   description: text("description").notNull(),
   quantity: real("quantity").notNull(),
-  unitPrice: real("unit_price").notNull(),
-  vatRate: real("vat_rate").notNull(),
-  unitOfMeasure: text("unit_of_measure").notNull(),
-  lineTotal: real("line_total").notNull(),
+  unit_price: real("unit_price").notNull(),
+  vat_rate: real("vat_rate").notNull(),
+  unit_of_measure: text("unit_of_measure").notNull(),
+  line_total: real("line_total").notNull(),
 });
 
-export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
+export const insertInvoiceItemSchema = createInsertSchema(invoice_items).omit({
   id: true,
-  invoiceId: true,
+  invoice_id: true,
 });
 
 export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
-export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type InvoiceItem = typeof invoice_items.$inferSelect;
 
 // Invoices schema
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  invoiceNumber: text("invoice_number").notNull().unique(),
-  customerId: integer("customer_id").notNull(),
-  companyProfileId: integer("company_profile_id").notNull(),
-  issueDate: text("issue_date").notNull(), // ISO format date string
-  dueDate: text("due_date").notNull(),     // ISO format date string
+  invoice_number: text("invoice_number").notNull().unique(),
+  customer_id: integer("customer_id").notNull(),
+  company_profile_id: integer("company_profile_id").notNull(),
+  issue_date: text("issue_date").notNull(), // ISO format date string
+  due_date: text("due_date").notNull(),     // ISO format date string
   currency: text("currency").notNull().default("EUR"),
   subtotal: real("subtotal").notNull(),
-  vatTotal: real("vat_total").notNull(),
+  vat_total: real("vat_total").notNull(),
   total: real("total").notNull(),
   notes: text("notes"),
-  paymentTerms: text("payment_terms"),
-  purchaseOrderRef: text("purchase_order_ref"),
+  payment_terms: text("payment_terms"),
+  purchase_order_ref: text("purchase_order_ref"),
   status: text("status").notNull().default("DRAFT"),
   profile: text("profile").notNull().default("BASIC_WL"),
-  validationStatus: text("validation_status").notNull().default("PENDING"),
-  validationMessages: json("validation_messages").$type<string[]>(),
-  pdfUrl: text("pdf_url"),
-  xmlContent: text("xml_content"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  validation_status: text("validation_status").notNull().default("PENDING"),
+  validation_messages: json("validation_messages").$type<string[]>(),
+  pdf_url: text("pdf_url"),
+  xml_content: text("xml_content"),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertInvoiceSchema = createInsertSchema(invoices).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  pdfUrl: true,
-  xmlContent: true,
-  validationStatus: true,
-  validationMessages: true
-});
+export const insertInvoiceSchema = createInsertSchema(invoices)
+  .omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+    pdf_url: true,
+    xml_content: true,
+    validation_status: true,
+    validation_messages: true
+  })
+  .extend({
+    customer_id: z.number().positive("A valid customer must be selected"),
+    company_profile_id: z.number().positive("A valid company profile must be selected")
+  });
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;

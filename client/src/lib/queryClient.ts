@@ -1,27 +1,54 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+// import { API_URL } from '@/config';
+const API_URL = 'http://localhost:3000'; // TODO: Replace with your actual API URL or env var
 
-async function throwIfResNotOk(res: Response) {
+const throwIfResNotOk = async (res: Response) => {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const error = await res.json();
+    console.error("[queryClient] API error response:", JSON.stringify(error, null, 2));
+    throw new Error(`${res.status}: ${JSON.stringify(error)}`);
   }
-}
+  return res;
+};
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
+export const apiRequest = async (method: string, endpoint: string, data?: any) => {
+  console.log("[queryClient] Making API request:", {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    endpoint,
+    data: JSON.stringify(data, null, 2)
   });
 
-  await throwIfResNotOk(res);
-  return res;
-}
+  const url = `${API_URL}${endpoint}`;
+  console.log("[queryClient] Full URL:", url);
+
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  };
+
+  if (data) {
+    options.body = JSON.stringify(data);
+    console.log("[queryClient] Request body:", JSON.stringify(data, null, 2));
+  }
+
+  console.log("[queryClient] Request options:", JSON.stringify(options, null, 2));
+
+  try {
+    const response = await fetch(url, options);
+    console.log("[queryClient] Raw response:", response);
+    console.log("[queryClient] Response status:", response.status);
+    console.log("[queryClient] Response headers:", JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
+    
+    return throwIfResNotOk(response);
+  } catch (error) {
+    console.error("[queryClient] Request failed:", error);
+    console.error("[queryClient] Error details:", JSON.stringify(error, null, 2));
+    throw error;
+  }
+};
 
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {

@@ -56,3 +56,6 @@ sample_facturx_final.pdf
 *.zip
 *.png
 *.lock
+
+# Added from the code block
+attached_assets/

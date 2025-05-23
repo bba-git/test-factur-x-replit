@@ -1,10 +1,20 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import 'dotenv/config';
+import express from 'express';
+import routes from './routes/index.js';
 import { setupVite, serveStatic, log } from "./vite";
+import { createServer } from "http";
+import companyProfilesRouter from './routes/companyProfiles';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+const startPort = 3000;
+console.log(`[BOOT] Starting backend in ${app.get('env')} mode on port ${startPort}`);
+
+console.log('[BOOT] Registering route: /api');
+app.use('/api', routes);
+app.use('/api/company-profiles', companyProfilesRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -36,10 +46,29 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+const server = createServer(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+const tryPort = (port: number): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    server.once('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`[BOOT] Port ${port} is in use, trying ${port + 1}`);
+        resolve(tryPort(port + 1));
+      } else {
+        reject(err);
+      }
+    });
+
+    server.listen(port, () => {
+      console.log(`[BOOT] Backend started successfully on http://localhost:${port}`);
+      resolve(port);
+    });
+  });
+};
+
+(async () => {
+  // Error handler
+  app.use((err: any, _req: any, res: any, _next: any) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
@@ -47,24 +76,16 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  try {
+    await tryPort(startPort);
+  } catch (err) {
+    console.error('[FATAL] Failed to start server:', err);
+    process.exit(1);
+  }
 })();
