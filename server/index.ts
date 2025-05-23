@@ -4,10 +4,21 @@ import routes from './routes/index.js';
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
 import companyProfilesRouter from './routes/companyProfiles';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import customersRouter from './routes/customers';
+import invoicesRouter from './routes/invoices';
 
 const app = express();
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true // Allow cookies
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 const startPort = 3000;
 console.log(`[BOOT] Starting backend in ${app.get('env')} mode on port ${startPort}`);
@@ -15,6 +26,8 @@ console.log(`[BOOT] Starting backend in ${app.get('env')} mode on port ${startPo
 console.log('[BOOT] Registering route: /api');
 app.use('/api', routes);
 app.use('/api/company-profiles', companyProfilesRouter);
+app.use('/api/customers', customersRouter);
+app.use('/api/invoices', invoicesRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();

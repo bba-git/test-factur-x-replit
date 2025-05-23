@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from '../supabaseClient';
 import { insertAndReturn } from '../utils/supabase/insertAndReturn';
+import { getAuthenticatedUser } from '../middleware/getAuthenticatedUser';
 
 interface CustomerDB {
   id: string;
@@ -33,8 +34,17 @@ interface CustomerResponse {
 
 const router = express.Router();
 
-router.get('/', async (_req, res) => {
-  const { data, error } = await supabase.from('customers').select('*');
+// Apply authentication middleware to all routes
+router.use(getAuthenticatedUser);
+
+router.get('/', async (req, res) => {
+  const { companyProfileId } = req.context!;
+  
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('company_profile_id', companyProfileId);
+
   if (error) return res.status(500).json({ message: error.message });
   res.json(data);
 });
@@ -42,6 +52,8 @@ router.get('/', async (_req, res) => {
 router.post('/', async (req, res) => {
   console.log('=== START POST /api/customers ===');
   console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+  
+  const { companyProfileId } = req.context!;
   
   // Keep snake_case for database
   const transformedData = {
@@ -54,7 +66,7 @@ router.post('/', async (req, res) => {
     contact_person: req.body.contact_person,
     email: req.body.email,
     phone: req.body.phone,
-    company_profile_id: req.body.company_profile_id
+    company_profile_id: companyProfileId // Use the authenticated user's company
   };
 
   console.log('Transformed data before Supabase:', JSON.stringify(transformedData, null, 2));
