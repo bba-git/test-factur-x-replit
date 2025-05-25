@@ -2,6 +2,17 @@ import express from 'express';
 import { supabase } from '../supabaseClient';
 import { getAuthenticatedUser } from '../middleware/getAuthenticatedUser';
 import { insertAndReturn } from '../utils/supabase/insertAndReturn';
+import { Request, Response } from 'express';
+import { generatePdf } from '../utils/pdf/generatePdf';
+
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  vat_rate: number;
+  unit_of_measure: string;
+  line_total: number;
+}
 
 interface InvoiceDB {
   id: string;
@@ -42,80 +53,168 @@ router.get('/', async (req, res) => {
 });
 
 // Create an invoice
-router.post('/', async (req, res) => {
-  console.log('[API] Creating invoice:', JSON.stringify(req.body, null, 2));
-  
+router.post('/', async (req: Request, res: Response) => {
+  console.log('[INVOICE][SERVER] Incoming request body:', req.body);
+  console.log('[INVOICE][SERVER] Session context:', req.context);
+
   try {
-    if (!req.body) {
-      console.error('[API] No request body provided');
-      return res.status(400).json({ message: 'Request body is required' });
+    // Early validation
+    if (!req.context?.companyProfileId) {
+      console.error('[INVOICE][SERVER] Missing company context');
+      return res.status(401).json({ message: 'Missing company context' });
     }
 
-    const { companyProfileId } = req.context!;
+    if (!req.body.customer_id) {
+      console.error('[INVOICE][SERVER] Missing customer ID');
+      return res.status(400).json({ message: 'Missing customer ID' });
+    }
 
-    // Validate customer belongs to the same company
+    if (!Array.isArray(req.body.items) || req.body.items.length === 0) {
+      console.error('[INVOICE][SERVER] No items in invoice');
+      return res.status(400).json({ message: 'Invoice must contain at least one item' });
+    }
+
+    // Verify customer belongs to the same company
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .select('id')
-      .eq('id', req.body.customer_id || req.body.customerId)
-      .eq('company_profile_id', companyProfileId)
+      .eq('id', req.body.customer_id)
+      .eq('company_profile_id', req.context.companyProfileId)
       .single();
 
-    if (customerError || !customer) {
-      return res.status(400).json({ message: 'Invalid customer or customer does not belong to your company' });
+    if (!customer || customerError) {
+      console.error('[INVOICE][SERVER] Customer validation failed', {
+        customerError,
+        customer_id: req.body.customer_id,
+        company_profile_id: req.context.companyProfileId
+      });
+      return res.status(403).json({ message: "Invalid customer or customer does not belong to your company" });
     }
 
-    // Convert camelCase to snake_case and ensure all required fields are present
-    const invoiceData = {
-      invoice_number: req.body.invoice_number || req.body.invoiceNumber,
-      customer_id: req.body.customer_id || req.body.customerId,
-      company_profile_id: companyProfileId, // Use authenticated user's company
-      issue_date: req.body.issue_date || req.body.issueDate,
-      due_date: req.body.due_date || req.body.dueDate,
-      currency: req.body.currency,
-      subtotal: req.body.subtotal,
-      vat_total: req.body.vat_total || req.body.vatTotal,
-      total: req.body.total,
-      notes: req.body.notes,
-      payment_terms: req.body.payment_terms || req.body.paymentTerms,
-      purchase_order_ref: req.body.purchase_order_ref || req.body.purchaseOrderRef,
-      status: req.body.status || 'DRAFT',
-      profile: req.body.profile || 'EN16931'
+    console.log('[INVOICE][SERVER] Validated customer ownership');
+
+    // Extract items from the request body
+    const { items, ...invoiceData } = req.body;
+
+    // Prepare the invoice insert payload
+    const invoicePayload = {
+      ...invoiceData,
+      company_profile_id: req.context.companyProfileId,
+      status: 'DRAFT',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
-    // Validate required fields
-    if (!invoiceData.invoice_number) {
-      return res.status(400).json({ message: 'Invoice number is required' });
+    console.log('[INVOICE][SERVER] Preparing invoice insert payload:', invoicePayload);
+
+    try {
+      // Insert the invoice first
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert(invoicePayload)
+        .select()
+        .single();
+
+      if (invoiceError) {
+        console.error('[INVOICE][SERVER] Supabase invoice insert error:', invoiceError);
+        return res.status(500).json({ message: "Failed to create invoice", error: invoiceError });
+      }
+
+      console.log('[INVOICE][SERVER] Invoice created successfully:', invoice);
+
+      // Prepare invoice items
+      const invoiceItems = items.map((item: InvoiceItem) => ({
+        invoice_id: invoice.id,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        vat_rate: item.vat_rate,
+        unit_of_measure: item.unit_of_measure,
+        line_total: item.line_total,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+
+      console.log('[INVOICE][SERVER] Preparing invoice items insert:', invoiceItems);
+
+      // Insert the invoice items
+      const { error: itemsError } = await supabase
+        .from('invoice_items')
+        .insert(invoiceItems);
+
+      if (itemsError) {
+        console.error('[INVOICE][SERVER] Supabase invoice items insert error:', itemsError);
+        // Attempt to delete the invoice if items insertion fails
+        await supabase
+          .from('invoices')
+          .delete()
+          .eq('id', invoice.id);
+        return res.status(500).json({ message: "Failed to create invoice items", error: itemsError });
+      }
+
+      console.log('[INVOICE][SERVER] Invoice items created successfully');
+      
+      // Return the complete invoice with items
+      const { data: completeInvoice, error: fetchError } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          items:invoice_items(*)
+        `)
+        .eq('id', invoice.id)
+        .single();
+
+      if (fetchError) {
+        console.error('[INVOICE][SERVER] Error fetching complete invoice:', fetchError);
+        return res.status(500).json({ message: "Invoice created but failed to fetch complete data" });
+      }
+
+      res.status(201).json(completeInvoice);
+    } catch (err) {
+      console.error('[INVOICE][SERVER] Unexpected exception during invoice creation:', err);
+      return res.status(500).json({ message: "Unexpected server error" });
     }
-    if (!invoiceData.customer_id) {
-      return res.status(400).json({ message: 'A valid customer must be selected' });
-    }
-    if (!invoiceData.issue_date) {
-      return res.status(400).json({ message: 'Issue date is required' });
-    }
-    if (!invoiceData.due_date) {
-      return res.status(400).json({ message: 'Due date is required' });
+  } catch (error) {
+    console.error('[INVOICE][SERVER] Unexpected error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Download invoice PDF
+router.get('/:id/download', async (req: Request, res: Response) => {
+  console.log('[INVOICE][SERVER] Download request for invoice:', req.params.id);
+  
+  try {
+    // Get invoice data
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(`
+        *,
+        items:invoice_items(*)
+      `)
+      .eq('id', req.params.id)
+      .single();
+
+    if (invoiceError || !invoice) {
+      console.error('[INVOICE][SERVER] Error fetching invoice:', invoiceError);
+      return res.status(404).json({ message: "Invoice not found" });
     }
 
-    console.log('[API] Inserting invoice data:', invoiceData);
+    console.log('[INVOICE][SERVER] Fetched invoice data:', invoice);
 
-    const { data, error } = await insertAndReturn<InvoiceDB>(supabase, 'invoices', invoiceData);
+    // Generate PDF
+    const pdfBuffer = await generatePdf(invoice, invoice.items, invoice.xml_content || '');
 
-    if (error) {
-      console.error('[API] Supabase error:', error);
-      return res.status(500).json({ message: error.message });
-    }
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${invoice.invoice_number}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
 
-    if (!data) {
-      console.error('[API] No data returned from Supabase');
-      return res.status(500).json({ message: 'No data returned from database' });
-    }
-
-    console.log('[API] Invoice created successfully:', data);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('[API] Unexpected error creating invoice:', err);
-    res.status(500).json({ message: err instanceof Error ? err.message : 'Unknown error occurred' });
+    // Send the PDF
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('[INVOICE][SERVER] Error generating PDF:', error);
+    res.status(500).json({ message: "Failed to generate PDF" });
   }
 });
 

@@ -82,6 +82,9 @@ export default function CreateCustomerModal({ open, onClose, onCustomerCreated }
         description: "The customer has been created successfully",
       });
       
+      // Dispatch custom event for customer creation
+      window.dispatchEvent(new Event('customerCreated'));
+      
       if (onCustomerCreated) {
         console.log("[CreateCustomerModal] Calling onCustomerCreated callback");
         onCustomerCreated();

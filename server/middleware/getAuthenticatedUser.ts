@@ -27,7 +27,7 @@ export async function getAuthenticatedUser(
     // Get the user
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, company_profile_id')
+      .select('id, email, is_admin, is_active')
       .eq('id', session.user_id)
       .single();
 
@@ -35,10 +35,21 @@ export async function getAuthenticatedUser(
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Attach user and company context to request
+    // Get the company profile
+    const { data: company, error: companyError } = await supabase
+      .from('company_profiles')
+      .select('id')
+      .limit(1)
+      .single();
+
+    if (companyError || !company) {
+      return res.status(403).json({ message: 'No company profile found' });
+    }
+
+    // Attach user and company profile to request
     req.context = {
       user,
-      companyProfileId: user.company_profile_id
+      companyProfileId: company.id
     };
 
     next();

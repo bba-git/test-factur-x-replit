@@ -14,6 +14,9 @@ interface CreateInvoiceModalProps {
   onClose: () => void;
 }
 
+const steps = ["basic", "items", "compliance", "review"] as const;
+type Step = typeof steps[number];
+
 export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
   useEffect(() => {
     console.log('[Modal] Mount');
@@ -22,7 +25,8 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
   useEffect(() => {
     console.log('[Modal] Open state changed:', open);
   }, [open]);
-  const [currentStep, setCurrentStep] = useState<"basic" | "items" | "compliance" | "review">("basic");
+  const [currentStep, setCurrentStep] = useState<Step>("basic");
+  const currentStepIndex = steps.indexOf(currentStep);
   const { toast } = useToast();
   const [profileSelectOpen, setProfileSelectOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -31,8 +35,8 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
     resolver: zodResolver(invoiceWithItemsSchema),
     defaultValues: {
       invoice_number: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-      customer_id: 0,
-      company_profile_id: 1,
+      customer_id: "",
+      company_profile_id: "",
       issue_date: new Date().toISOString().split('T')[0],
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       currency: "EUR",
@@ -56,26 +60,42 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
     try {
       const response = await apiRequest("GET", "/api/customers");
       const data = await response.json();
+      console.log('[Modal] Fetched customers:', data);
       setCustomers(data);
     } catch (error) {
-      console.error("Error fetching customers:", error);
+      console.error("[Modal] Error fetching customers:", error);
     }
   };
 
+  // Refresh customers when modal opens
   useEffect(() => {
     if (open) {
       fetchCustomers();
     }
   }, [open]);
 
+  // Add event listener for customer creation
+  useEffect(() => {
+    const handleCustomerCreated = () => {
+      console.log('[Modal] Customer created, refreshing list');
+      fetchCustomers();
+    };
+
+    window.addEventListener('customerCreated', handleCustomerCreated);
+    return () => {
+      window.removeEventListener('customerCreated', handleCustomerCreated);
+    };
+  }, []);
+
   const createInvoice = async (data: InvoiceWithItems) => {
-    console.log('[Form] Submitting invoice:', data);
+    console.log('[INVOICE][CLIENT] Starting invoice creation process');
+    console.log('[INVOICE][CLIENT] Raw form data:', JSON.stringify(data, null, 2));
+    
     try {
-      // Convert to snake_case for the API
+      // Convert to snake_case for the API, excluding company_profile_id
       const apiData = {
         invoice_number: data.invoice_number,
         customer_id: data.customer_id,
-        company_profile_id: data.company_profile_id,
         issue_date: data.issue_date,
         due_date: data.due_date,
         currency: data.currency,
@@ -90,19 +110,35 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
         items: data.items.map(item => ({
           description: item.description,
           quantity: item.quantity,
-          unit_price: item.unitPrice,
-          vat_rate: item.vatRate,
-          unit_of_measure: item.unitOfMeasure,
-          line_total: item.lineTotal
+          unit_price: item.unit_price,
+          vat_rate: item.vat_rate,
+          unit_of_measure: item.unit_of_measure,
+          line_total: item.line_total
         }))
       };
 
-      const response = await apiRequest("POST", "/api/invoices", apiData);
-      const invoice = await response.json();
+      console.log('[INVOICE][CLIENT] Transformed API data:', JSON.stringify(apiData, null, 2));
+      console.log('[INVOICE][CLIENT] Sending API request to /api/invoices');
       
-      // Download the PDF
+      const response = await apiRequest("POST", "/api/invoices", apiData);
+      console.log('[INVOICE][CLIENT] API Response status:', response.status);
+      
+      const invoice = await response.json();
+      console.log('[INVOICE][CLIENT] Invoice created successfully:', JSON.stringify(invoice, null, 2));
+      
+      console.log('[INVOICE][CLIENT] Requesting PDF download for invoice:', invoice.id);
       const pdfResponse = await fetch(`/api/invoices/${invoice.id}/download`);
+      console.log('[INVOICE][CLIENT] PDF Response status:', pdfResponse.status);
+      console.log('[INVOICE][CLIENT] PDF Response headers:', Object.fromEntries(pdfResponse.headers.entries()));
+      
       const pdfBlob = await pdfResponse.blob();
+      console.log('[INVOICE][CLIENT] PDF Blob size:', pdfBlob.size, 'bytes');
+      console.log('[INVOICE][CLIENT] PDF Blob type:', pdfBlob.type);
+      
+      if (pdfBlob.type !== 'application/pdf') {
+        console.error('[INVOICE][CLIENT] Invalid PDF response type:', pdfBlob.type);
+        throw new Error('Invalid PDF response type');
+      }
       
       // Create download link
       const url = window.URL.createObjectURL(pdfBlob);
@@ -114,53 +150,37 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
+      console.log('[INVOICE][CLIENT] PDF download initiated');
+      
       toast({
         title: "Invoice created",
         description: "Your invoice has been created and downloaded successfully",
       });
       onClose();
     } catch (error) {
-      console.error("[Form] Error creating invoice:", error);
+      console.error("[INVOICE][CLIENT] Error creating invoice:", error);
+      console.error("[INVOICE][CLIENT] Error details:", JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: "Failed to create invoice. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create invoice. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const handleNextStep = () => {
-    if (profileSelectOpen) setProfileSelectOpen(false);
-    console.log('[Button] Next step clicked. Current:', currentStep);
-    switch(currentStep) {
-      case "basic":
-        setCurrentStep("items");
-        break;
-      case "items":
-        setCurrentStep("compliance");
-        break;
-      case "compliance":
-        setCurrentStep("review");
-        break;
-      case "review":
-        form.handleSubmit(createInvoice)();
-        break;
+    console.log('[INVOICE][CLIENT] Step changed:', currentStep);
+    if (currentStep === "review") {
+      console.log('[INVOICE][CLIENT] Form submit payload:', form.getValues());
+      createInvoice(form.getValues());
+    } else {
+      setCurrentStep(steps[currentStepIndex + 1]);
     }
   };
 
   const handlePreviousStep = () => {
-    if (profileSelectOpen) setProfileSelectOpen(false);
-    console.log('[Button] Previous step clicked. Current:', currentStep);
-    switch(currentStep) {
-      case "items":
-        setCurrentStep("basic");
-        break;
-      case "compliance":
-        setCurrentStep("items");
-        break;
-      case "review":
-        setCurrentStep("compliance");
-        break;
+    if (currentStepIndex > 0) {
+      setCurrentStep(steps[currentStepIndex - 1]);
     }
   };
 
@@ -314,8 +334,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                       value={form.getValues("customer_id")}
                       onChange={(e) => {
                         logSelectEvent('Customer', 'changed', e.target.value);
-                        const value = parseInt(e.target.value);
-                        form.setValue("customer_id", value, { 
+                        form.setValue("customer_id", e.target.value, { 
                           shouldValidate: true,
                           shouldDirty: true,
                           shouldTouch: true
@@ -392,6 +411,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VAT %</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
@@ -401,19 +421,120 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                         form.watch("items").map((item, index) => (
                           <tr key={index}>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{item.description}</div>
+                              <Input
+                                value={item.description}
+                                onChange={(e) => {
+                                  const items = [...form.getValues("items")];
+                                  items[index] = {
+                                    ...items[index],
+                                    description: e.target.value
+                                  };
+                                  form.setValue("items", items);
+                                }}
+                                className="w-full"
+                              />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{item.quantity} {item.unitOfMeasure}</div>
+                              <Input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const items = [...form.getValues("items")];
+                                  const quantity = parseFloat(e.target.value) || 0;
+                                  items[index] = {
+                                    ...items[index],
+                                    quantity,
+                                    line_total: quantity * items[index].unit_price
+                                  };
+                                  form.setValue("items", items);
+                                  // Update totals
+                                  const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
+                                  const vatTotal = items.reduce((sum, item) => sum + (item.line_total * item.vat_rate / 100), 0);
+                                  form.setValue("subtotal", subtotal);
+                                  form.setValue("vat_total", vatTotal);
+                                  form.setValue("total", subtotal + vatTotal);
+                                }}
+                                className="w-20"
+                                min="0"
+                                step="0.01"
+                              />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.unitPrice)}</div>
+                              <Input
+                                type="number"
+                                value={item.unit_price}
+                                onChange={(e) => {
+                                  const items = [...form.getValues("items")];
+                                  const unitPrice = parseFloat(e.target.value) || 0;
+                                  items[index] = {
+                                    ...items[index],
+                                    unit_price: unitPrice,
+                                    line_total: items[index].quantity * unitPrice
+                                  };
+                                  form.setValue("items", items);
+                                  // Update totals
+                                  const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
+                                  const vatTotal = items.reduce((sum, item) => sum + (item.line_total * item.vat_rate / 100), 0);
+                                  form.setValue("subtotal", subtotal);
+                                  form.setValue("vat_total", vatTotal);
+                                  form.setValue("total", subtotal + vatTotal);
+                                }}
+                                className="w-24"
+                                min="0"
+                                step="0.01"
+                              />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{item.vatRate}%</div>
+                              <Input
+                                type="number"
+                                value={item.vat_rate}
+                                onChange={(e) => {
+                                  const items = [...form.getValues("items")];
+                                  const vatRate = parseFloat(e.target.value) || 0;
+                                  items[index] = {
+                                    ...items[index],
+                                    vat_rate: vatRate
+                                  };
+                                  form.setValue("items", items);
+                                  // Update VAT total
+                                  const vatTotal = items.reduce((sum, item) => sum + (item.line_total * item.vat_rate / 100), 0);
+                                  form.setValue("vat_total", vatTotal);
+                                  form.setValue("total", form.getValues("subtotal") + vatTotal);
+                                }}
+                                className="w-20"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                              />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.lineTotal)}</div>
+                              <select
+                                value={item.unit_of_measure}
+                                onChange={(e) => {
+                                  const items = [...form.getValues("items")];
+                                  items[index] = {
+                                    ...items[index],
+                                    unit_of_measure: e.target.value
+                                  };
+                                  form.setValue("items", items);
+                                }}
+                                className="w-20 border rounded px-2 py-1"
+                              >
+                                <option value="EA">EA</option>
+                                <option value="HRS">HRS</option>
+                                <option value="KG">KG</option>
+                                <option value="L">L</option>
+                                <option value="M">M</option>
+                                <option value="M2">M²</option>
+                                <option value="M3">M³</option>
+                                <option value="PCS">PCS</option>
+                                <option value="T">T</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.line_total)}
+                              </div>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                               <button
@@ -423,6 +544,12 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                                   const items = [...form.getValues("items")];
                                   items.splice(index, 1);
                                   form.setValue("items", items);
+                                  // Update totals
+                                  const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
+                                  const vatTotal = items.reduce((sum, item) => sum + (item.line_total * item.vat_rate / 100), 0);
+                                  form.setValue("subtotal", subtotal);
+                                  form.setValue("vat_total", vatTotal);
+                                  form.setValue("total", subtotal + vatTotal);
                                 }}
                               >
                                 <span className="material-icons">delete</span>
@@ -432,7 +559,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
+                          <td colSpan={7} className="px-4 py-3 text-center text-gray-500">
                             No items added yet
                           </td>
                         </tr>
@@ -450,11 +577,11 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                     items.push({
                       description: "New Item",
                       quantity: 1,
-                      unitPrice: 0,
-                      vatRate: 20,
-                      unitOfMeasure: "EA",
-                      lineTotal: 0,
-                      productId: undefined
+                      unit_price: 0,
+                      vat_rate: 20,
+                      unit_of_measure: "EA",
+                      line_total: 0,
+                      product_id: undefined
                     });
                     form.setValue("items", items);
                   }}
@@ -569,10 +696,10 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
                       {form.watch("items").map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="py-2">{item.description}</td>
-                          <td className="text-right py-2">{item.quantity} {item.unitOfMeasure}</td>
-                          <td className="text-right py-2">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.unitPrice)}</td>
-                          <td className="text-right py-2">{item.vatRate}%</td>
-                          <td className="text-right py-2">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.lineTotal)}</td>
+                          <td className="text-right py-2">{item.quantity} {item.unit_of_measure}</td>
+                          <td className="text-right py-2">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.unit_price)}</td>
+                          <td className="text-right py-2">{item.vat_rate}%</td>
+                          <td className="text-right py-2">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: form.getValues("currency") }).format(item.line_total)}</td>
                         </tr>
                       ))}
                       <tr className="border-b">

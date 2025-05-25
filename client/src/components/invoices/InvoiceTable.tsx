@@ -27,7 +27,7 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
     // Filter by search query
     if (
       searchQuery && 
-      !invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
+      !invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())
     ) {
       return false;
     }
@@ -55,8 +55,8 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
     window.open(`/api/invoices/${invoice.id}/download`, "_blank");
   };
 
-  const getStatusBadgeClasses = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusBadgeClasses = (status: string | undefined | null) => {
+    switch ((status || '').toLowerCase()) {
       case 'valid':
         return 'compliance-valid';
       case 'invalid':
@@ -64,7 +64,7 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
       case 'pending':
         return 'compliance-pending';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'compliance-unknown';
     }
   };
 
@@ -185,13 +185,13 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
                   filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-primary">{invoice.invoiceNumber}</div>
+                        <div className="text-sm font-medium text-primary">{invoice.invoice_number}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{invoice.customerId}</div>
+                        <div className="text-sm text-gray-900">{invoice.customer_id}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{invoice.issueDate}</div>
+                        <div className="text-sm text-gray-500">{invoice.issue_date}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
@@ -204,8 +204,8 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(invoice.validationStatus)}`}>
-                          {invoice.validationStatus}
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(invoice.validation_status)}`}>
+                          {invoice.validation_status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

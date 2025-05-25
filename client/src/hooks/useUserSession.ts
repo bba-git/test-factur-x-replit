@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 interface User {
   id: string;
   email: string;
-  company_profile_id: string;
+  is_admin: boolean;
+  is_active: boolean;
 }
 
 interface UserSession {

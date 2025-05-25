@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, real, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,7 +18,7 @@ export type User = typeof users.$inferSelect;
 
 // Customer schema
 export const customers = pgTable("customers", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   vat_number: text("vat_number"),
   address: text("address").notNull(),
@@ -39,7 +39,7 @@ export type Customer = typeof customers.$inferSelect;
 
 // Company profile schema
 export const companyProfiles = pgTable("company_profiles", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   vat_number: text("vat_number").notNull(),
   address: text("address").notNull(),
@@ -127,10 +127,10 @@ export type InvoiceItem = typeof invoice_items.$inferSelect;
 
 // Invoices schema
 export const invoices = pgTable("invoices", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   invoice_number: text("invoice_number").notNull().unique(),
-  customer_id: integer("customer_id").notNull(),
-  company_profile_id: integer("company_profile_id").notNull(),
+  customer_id: uuid("customer_id").notNull().references(() => customers.id),
+  company_profile_id: uuid("company_profile_id").notNull().references(() => companyProfiles.id),
   issue_date: text("issue_date").notNull(), // ISO format date string
   due_date: text("due_date").notNull(),     // ISO format date string
   currency: text("currency").notNull().default("EUR"),
@@ -161,8 +161,8 @@ export const insertInvoiceSchema = createInsertSchema(invoices)
     validation_messages: true
   })
   .extend({
-    customer_id: z.number().positive("A valid customer must be selected"),
-    company_profile_id: z.number().positive("A valid company profile must be selected")
+    customer_id: z.string().uuid("A valid customer must be selected"),
+    company_profile_id: z.string().uuid("A valid company profile must be selected")
   });
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;

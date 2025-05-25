@@ -33,12 +33,8 @@ export default function LoginPage() {
 
       const { user } = await response.json();
       
-      // If user has no company profile, redirect to company creation
-      if (!user.company_profile_id) {
-        setLocation('/company');
-      } else {
-        setLocation('/');
-      }
+      // Redirect to home page after successful login
+      setLocation('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }

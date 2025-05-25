@@ -45,7 +45,12 @@ router.get('/', async (req, res) => {
     .select('*')
     .eq('company_profile_id', companyProfileId);
 
-  if (error) return res.status(500).json({ message: error.message });
+  if (error) {
+    console.error('[ERROR] Failed to fetch customers:', error);
+    return res.status(500).json({ message: 'Failed to fetch customers' });
+  }
+  
+  console.log('[DEBUG] Fetched customers:', data);
   res.json(data);
 });
 
@@ -53,75 +58,52 @@ router.post('/', async (req, res) => {
   console.log('=== START POST /api/customers ===');
   console.log('Raw request body:', JSON.stringify(req.body, null, 2));
   
-  const { companyProfileId } = req.context!;
-  
-  // Validate company context
-  if (!companyProfileId) {
-    console.error('[ERROR] Missing company context in request');
-    return res.status(403).json({ message: 'Company context missing' });
-  }
-  
-  console.log('[DEBUG] Authenticated user company:', companyProfileId);
-  
-  // Keep snake_case for database
-  const transformedData = {
-    name: req.body.name,
-    vat_number: req.body.vat_number,
-    address: req.body.address,
-    city: req.body.city,
-    postal_code: req.body.postal_code || "", // Ensure postal_code is never null
-    country: req.body.country,
-    contact_person: req.body.contact_person,
-    email: req.body.email,
-    phone: req.body.phone,
-    company_profile_id: companyProfileId // Use the authenticated user's company
-  };
-
-  console.log('[DEBUG] Final customer payload:', JSON.stringify(transformedData, null, 2));
-
   try {
-    console.log('Attempting Supabase insert...');
-    const { data, error } = await insertAndReturn<CustomerDB>(supabase, 'customers', transformedData);
+    // Get the first company profile (for now, we'll use the first one)
+    const { data: company, error: companyError } = await supabase
+      .from('company_profiles')
+      .select('id')
+      .limit(1)
+      .single();
 
-    console.log('Supabase response:', { data, error });
+    if (companyError || !company) {
+      console.error('[ERROR] No company profile found');
+      return res.status(403).json({ message: 'No company profile found' });
+    }
+
+    console.log('[DEBUG] Using company profile:', company.id);
+    
+    // Keep snake_case for database
+    const transformedData = {
+      name: req.body.name,
+      vat_number: req.body.vat_number,
+      address: req.body.address,
+      city: req.body.city,
+      postal_code: req.body.postal_code || "", // Ensure postal_code is never null
+      country: req.body.country,
+      contact_person: req.body.contact_person,
+      email: req.body.email,
+      phone: req.body.phone,
+      company_profile_id: company.id // Use the company ID we just fetched
+    };
+
+    console.log('[DEBUG] Final customer payload:', JSON.stringify(transformedData, null, 2));
+
+    const { data, error } = await supabase
+      .from('customers')
+      .insert(transformedData)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Supabase error details:', {
-        message: error.message
-      });
-      return res.status(500).json({ message: error.message });
+      console.error('[ERROR] Failed to create customer:', error);
+      return res.status(500).json({ message: 'Failed to create customer' });
     }
 
-    if (!data) {
-      console.error('No data returned from Supabase insert');
-      return res.status(500).json({ message: 'No data returned from Supabase' });
-    }
-
-    console.log('Successfully inserted data:', JSON.stringify(data, null, 2));
-    
-    // Transform to camelCase for frontend
-    const response = {
-      id: data.id,
-      name: data.name,
-      vatNumber: data.vat_number,
-      address: data.address,
-      city: data.city,
-      postalCode: data.postal_code,
-      country: data.country,
-      contactPerson: data.contact_person,
-      email: data.email,
-      phone: data.phone,
-      companyProfileId: data.company_profile_id,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-    
-    console.log('Final response data:', JSON.stringify(response, null, 2));
-    console.log('=== END POST /api/customers ===');
-    
-    res.status(201).json(response);
-  } catch (err) {
-    console.error('Unexpected error in POST /api/customers:', err);
+    console.log('[DEBUG] Created customer:', data);
+    res.json(data);
+  } catch (error) {
+    console.error('[ERROR] Unexpected error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
