@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import logging
+import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -15,87 +16,23 @@ def convert_to_pdfa3(input_pdf: str, output_pdf: str) -> bool:
     """
     try:
         logger.info(f"Converting {input_pdf} to PDF/A-3")
-        # Ghostscript command for PDF/A-3 conversion
-        cmd = f"gs -dPDFA=3 -dBATCH -dNOPAUSE -sProcessColorModel=DeviceRGB -sDEVICE=pdfwrite -dPDFACompatibilityPolicy=1 -sOutputFile={output_pdf} {input_pdf}"
+        # Ghostscript command for PDF/A-3 conversion with proper metadata
+        cmd = (
+            f"gs -dPDFA=3 -dBATCH -dNOPAUSE "
+            f"-sDEVICE=pdfwrite -dPDFACompatibilityPolicy=1 "
+            f"-dProcessColorModel=/DeviceRGB "
+            f"-dColorConversionStrategy=/sRGB "
+            f"-sColorConversionStrategyForImages=/sRGB "
+            f"-sPDFAOutputConditionIdentifier=sRGB "
+            f"-sOutputCondition=\"sRGB\" "
+            f"-sICCProfile=/usr/share/color/icc/sRGB.icc "
+            f"-sOutputFile={output_pdf} {input_pdf}"
+        )
         os.system(cmd)
         return os.path.exists(output_pdf)
     except Exception as e:
         logger.error(f"Error converting to PDF/A-3: {e}")
         return False
-
-def generate_facturx_xml(json_data: dict) -> str:
-    """
-    Generate Factur-X XML from JSON data
-    """
-    try:
-        logger.info("Generating Factur-X XML")
-        # Basic XML template
-        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
-    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
-    xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
-    <rsm:ExchangedDocumentContext>
-        <ram:GuidelineSpecifiedDocumentContextParameter>
-            <ram:ID>urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:en16931</ram:ID>
-        </ram:GuidelineSpecifiedDocumentContextParameter>
-    </rsm:ExchangedDocumentContext>
-    <rsm:ExchangedDocument>
-        <ram:ID>{json_data['invoice']['number']}</ram:ID>
-        <ram:TypeCode>380</ram:TypeCode>
-        <ram:IssueDateTime>
-            <udt:DateTimeString format="102">{json_data['invoice']['date']}</udt:DateTimeString>
-        </ram:IssueDateTime>
-    </rsm:ExchangedDocument>
-    <rsm:SupplyChainTradeTransaction>
-        <ram:IncludedSupplyChainTradeLineItem>
-            <ram:AssociatedDocumentLineDocument>
-                <ram:LineID>1</ram:LineID>
-            </ram:AssociatedDocumentLineDocument>
-            <ram:SpecifiedTradeProduct>
-                <ram:Name>{json_data['invoice']['items'][0]['description']}</ram:Name>
-            </ram:SpecifiedTradeProduct>
-            <ram:SpecifiedLineTradeAgreement>
-                <ram:NetPriceProductTradePrice>
-                    <ram:ChargeAmount>{json_data['invoice']['items'][0]['unitPrice']}</ram:ChargeAmount>
-                </ram:NetPriceProductTradePrice>
-            </ram:SpecifiedLineTradeAgreement>
-            <ram:SpecifiedLineTradeDelivery>
-                <ram:BilledQuantity unitCode="EA">{json_data['invoice']['items'][0]['quantity']}</ram:BilledQuantity>
-            </ram:SpecifiedLineTradeDelivery>
-            <ram:SpecifiedLineTradeSettlement>
-                <ram:ApplicableTradeTax>
-                    <ram:TypeCode>VAT</ram:TypeCode>
-                    <ram:CategoryCode>S</ram:CategoryCode>
-                    <ram:RateApplicablePercent>{json_data['invoice']['items'][0]['vatRate']}</ram:RateApplicablePercent>
-                </ram:ApplicableTradeTax>
-                <ram:SpecifiedTradeSettlementLineMonetarySummation>
-                    <ram:LineTotalAmount>{json_data['invoice']['items'][0]['lineTotal']}</ram:LineTotalAmount>
-                </ram:SpecifiedTradeSettlementLineMonetarySummation>
-            </ram:SpecifiedLineTradeSettlement>
-        </ram:IncludedSupplyChainTradeLineItem>
-        <ram:ApplicableHeaderTradeAgreement>
-            <ram:SellerTradeParty>
-                <ram:Name>Your Company Name</ram:Name>
-            </ram:SellerTradeParty>
-            <ram:BuyerTradeParty>
-                <ram:Name>Customer Name</ram:Name>
-            </ram:BuyerTradeParty>
-        </ram:ApplicableHeaderTradeAgreement>
-        <ram:ApplicableHeaderTradeSettlement>
-            <ram:InvoiceCurrencyCode>{json_data['invoice']['currency']}</ram:InvoiceCurrencyCode>
-            <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
-                <ram:LineTotalAmount>{json_data['invoice']['total']}</ram:LineTotalAmount>
-                <ram:TaxBasisTotalAmount>{json_data['invoice']['total']}</ram:TaxBasisTotalAmount>
-                <ram:TaxTotalAmount>0</ram:TaxTotalAmount>
-                <ram:GrandTotalAmount>{json_data['invoice']['total']}</ram:GrandTotalAmount>
-            </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
-        </ram:ApplicableHeaderTradeSettlement>
-    </rsm:SupplyChainTradeTransaction>
-</rsm:CrossIndustryInvoice>"""
-        return xml
-    except Exception as e:
-        logger.error(f"Error generating Factur-X XML: {e}")
-        return ""
 
 def embed_xml_in_pdf(pdf_path: str, xml_content: str) -> bool:
     """
@@ -104,7 +41,7 @@ def embed_xml_in_pdf(pdf_path: str, xml_content: str) -> bool:
     try:
         logger.info(f"Embedding XML into {pdf_path}")
         from PyPDF2 import PdfReader, PdfWriter
-        from PyPDF2.generic import NameObject, DictionaryObject, ArrayObject, createStringObject
+        from PyPDF2.generic import NameObject, DictionaryObject, ArrayObject, create_string_object, StreamObject
 
         # Read the PDF
         reader = PdfReader(pdf_path)
@@ -114,26 +51,77 @@ def embed_xml_in_pdf(pdf_path: str, xml_content: str) -> bool:
         for page in reader.pages:
             writer.add_page(page)
 
-        # Create the XML attachment
+        # Create the XML attachment with proper file specification
         xml_file = DictionaryObject()
         xml_file.update({
             NameObject('/Type'): NameObject('/Filespec'),
-            NameObject('/F'): createStringObject('factur-x.xml'),
+            NameObject('/F'): create_string_object('factur-x.xml'),
+            NameObject('/UF'): create_string_object('factur-x.xml'),
             NameObject('/EF'): DictionaryObject({
-                NameObject('/F'): createStringObject(xml_content)
+                NameObject('/F'): create_string_object(xml_content)
             })
         })
 
-        # Add the XML to the PDF
-        writer._root_object.update({
-            NameObject('/Names'): DictionaryObject({
+        # Add the XML to the PDF with proper structure
+        if '/Names' not in writer._root_object:
+            writer._root_object.update({
+                NameObject('/Names'): DictionaryObject()
+            })
+
+        if '/EmbeddedFiles' not in writer._root_object['/Names']:
+            writer._root_object['/Names'].update({
                 NameObject('/EmbeddedFiles'): DictionaryObject({
-                    NameObject('/Names'): ArrayObject([
-                        createStringObject('factur-x.xml'),
-                        xml_file
-                    ])
+                    NameObject('/Names'): ArrayObject()
                 })
             })
+
+        # Add the XML file to the EmbeddedFiles array
+        writer._root_object['/Names']['/EmbeddedFiles']['/Names'].append(create_string_object('factur-x.xml'))
+        writer._root_object['/Names']['/EmbeddedFiles']['/Names'].append(xml_file)
+
+        # Generate XMP metadata
+        now = datetime.datetime.utcnow().isoformat() + "Z"
+        xmp_metadata = f"""<?xpacket begin='' id='W5M0MpCehiHzreSzNTczkc9d'?>
+<x:xmpmeta xmlns:x='adobe:ns:meta/'>
+  <rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
+    <rdf:Description rdf:about=''
+      xmlns:pdfaid='http://www.aiim.org/pdfa/ns/id/'
+      xmlns:dc='http://purl.org/dc/elements/1.1/'
+      xmlns:xmp='http://ns.adobe.com/xap/1.0/'
+      xmlns:pdf='http://ns.adobe.com/pdf/1.3/'>
+      <pdfaid:part>3</pdfaid:part>
+      <pdfaid:conformance>B</pdfaid:conformance>
+      <dc:title><rdf:Alt><rdf:li xml:lang="x-default">Factur-X Invoice</rdf:li></rdf:Alt></dc:title>
+      <dc:creator><rdf:Seq><rdf:li>Factur-X Generator</rdf:li></rdf:Seq></dc:creator>
+      <xmp:CreateDate>{now}</xmp:CreateDate>
+      <xmp:ModifyDate>{now}</xmp:ModifyDate>
+      <xmp:MetadataDate>{now}</xmp:MetadataDate>
+      <xmp:CreatorTool>Factur-X Generator</xmp:CreatorTool>
+      <pdf:Producer>Factur-X Generator</pdf:Producer>
+      <pdf:Keywords>Factur-X, Invoice, PDF/A-3</pdf:Keywords>
+    </rdf:Description>
+    <rdf:Description rdf:about=''
+      xmlns:zf='urn:ferd:pdfa:CrossIndustryDocument:invoice:2p0#'
+      zf:DocumentType='INVOICE'
+      zf:DocumentFileName='factur-x.xml'
+      zf:Version='2p0'
+      zf:ConformanceLevel='EN16931'/>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end='w'?>"""
+
+        # Create XMP metadata stream
+        xmp_stream = StreamObject()
+        xmp_stream._data = xmp_metadata.encode('utf-8')
+        xmp_stream.update({
+            NameObject('/Type'): NameObject('/Metadata'),
+            NameObject('/Subtype'): NameObject('/XML'),
+        })
+
+        # Add metadata to the PDF
+        metadata_ref = writer._add_object(xmp_stream)
+        writer._root_object.update({
+            NameObject('/Metadata'): metadata_ref
         })
 
         # Save the modified PDF
@@ -166,24 +154,17 @@ def main():
         logger.error(f"Error reading JSON file: {e}")
         sys.exit(1)
 
-    # Generate XML
-    xml_content = generate_facturx_xml(json_data)
-    if not xml_content:
-        logger.error("Failed to generate XML")
-        sys.exit(1)
-
     # Convert to PDF/A-3
     if not convert_to_pdfa3(input_pdf, output_pdf):
         logger.error("Failed to convert to PDF/A-3")
         sys.exit(1)
 
     # Embed XML
-    if not embed_xml_in_pdf(output_pdf, xml_content):
+    if not embed_xml_in_pdf(output_pdf, json_data.get('xml', '')):
         logger.error("Failed to embed XML")
         sys.exit(1)
 
     logger.info("Successfully processed invoice")
-    sys.exit(0)
 
 if __name__ == "__main__":
     main() 

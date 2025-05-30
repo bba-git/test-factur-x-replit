@@ -2,6 +2,7 @@ import express from 'express';
 import { supabase } from '../supabaseClient';
 import { insertAndReturn } from '../utils/supabase/insertAndReturn';
 import { getAuthenticatedUser } from '../middleware/getAuthenticatedUser';
+import { logger, safeLog } from '../utils/logger';
 
 interface CustomerDB {
   id: string;
@@ -46,17 +47,17 @@ router.get('/', async (req, res) => {
     .eq('company_profile_id', companyProfileId);
 
   if (error) {
-    console.error('[ERROR] Failed to fetch customers:', error);
+    logger.error({ error }, 'Failed to fetch customers');
     return res.status(500).json({ message: 'Failed to fetch customers' });
   }
   
-  console.log('[DEBUG] Fetched customers:', data);
+  logger.debug({ customers: data }, 'Fetched customers');
   res.json(data);
 });
 
 router.post('/', async (req, res) => {
-  console.log('=== START POST /api/customers ===');
-  console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+  logger.info('=== START POST /api/customers ===');
+  logger.debug({ body: req.body }, 'Raw request body');
   
   try {
     // Get the first company profile (for now, we'll use the first one)
@@ -67,11 +68,11 @@ router.post('/', async (req, res) => {
       .single();
 
     if (companyError || !company) {
-      console.error('[ERROR] No company profile found');
+      logger.error('No company profile found');
       return res.status(403).json({ message: 'No company profile found' });
     }
 
-    console.log('[DEBUG] Using company profile:', company.id);
+    logger.debug({ companyId: company.id }, 'Using company profile');
     
     // Keep snake_case for database
     const transformedData = {
@@ -87,7 +88,7 @@ router.post('/', async (req, res) => {
       company_profile_id: company.id // Use the company ID we just fetched
     };
 
-    console.log('[DEBUG] Final customer payload:', JSON.stringify(transformedData, null, 2));
+    logger.debug({ data: transformedData }, 'Final customer payload');
 
     const { data, error } = await supabase
       .from('customers')
@@ -96,14 +97,14 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) {
-      console.error('[ERROR] Failed to create customer:', error);
+      logger.error({ error }, 'Failed to create customer');
       return res.status(500).json({ message: 'Failed to create customer' });
     }
 
-    console.log('[DEBUG] Created customer:', data);
+    logger.debug({ customer: data }, 'Created customer');
     res.json(data);
   } catch (error) {
-    console.error('[ERROR] Unexpected error:', error);
+    logger.error({ error }, 'Unexpected error');
     res.status(500).json({ message: 'Internal server error' });
   }
 });

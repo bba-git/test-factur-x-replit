@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { logger, safeLog, WORKFLOW } from '../logger';
+import { generateZugferdXml } from '../../invoice/zugferd';
 
 const execAsync = promisify(exec);
 
@@ -24,6 +26,15 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
       const tempPdfPath = path.join(tempDir, `${invoice.invoice_number}.pdf`);
       const tempJsonPath = path.join(tempDir, `${invoice.invoice_number}.json`);
       const finalPdfPath = path.join(tempDir, `${invoice.invoice_number}_final.pdf`);
+
+      logger.debug({ 
+        workflow: WORKFLOW.PDF,
+        paths: {
+          tempPdf: tempPdfPath,
+          tempJson: tempJsonPath,
+          finalPdf: finalPdfPath
+        }
+      }, 'Generated temporary file paths');
 
       // Generate initial PDF
       const buffers: Buffer[] = [];
@@ -48,6 +59,11 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
           const pdfBuffer = Buffer.concat(buffers);
           fs.writeFileSync(tempPdfPath, pdfBuffer);
 
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            size: pdfBuffer.length
+          }, 'Initial PDF generated');
+
           // Create JSON file for Factur-X
           const jsonData = {
             invoice: {
@@ -63,29 +79,97 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
                 vatRate: item.vat_rate,
                 lineTotal: item.line_total
               }))
-            }
+            },
+            xml: xmlContent
           };
           fs.writeFileSync(tempJsonPath, JSON.stringify(jsonData, null, 2));
 
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            jsonSize: JSON.stringify(jsonData).length
+          }, 'JSON data written');
+
           // Call Python script for PDF/A-3 conversion and XML embedding
-          const scriptPath = path.join(__dirname, 'facturx_process.py');
+          const scriptPath = path.join(__dirname, '..', '..', 'invoice', 'facturx_process.py');
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            scriptPath,
+            exists: fs.existsSync(scriptPath)
+          }, 'Checking Python script');
+
+          if (!fs.existsSync(scriptPath)) {
+            logger.error({ 
+              workflow: WORKFLOW.PDF,
+              scriptPath
+            }, 'Python script not found');
+            throw new Error('Python script not found');
+          }
+
+          logger.debug({
+            workflow: WORKFLOW.PDF,
+            script: scriptPath,
+            inputPdf: tempPdfPath,
+            inputJson: tempJsonPath,
+            outputPdf: finalPdfPath
+          }, 'Executing Python script');
+
           const { stdout, stderr } = await execAsync(`python3 ${scriptPath} ${tempPdfPath} ${tempJsonPath} ${finalPdfPath}`);
           
-          if (stderr) {
-            console.error('[PDF] Python script stderr:', stderr);
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            stdout
+          }, 'Python script output');
+
+          // Check if the script actually failed (non-zero exit code)
+          if (stderr && !/(warning|deprecation|successfully processed)/i.test(stderr)) {
+            logger.error({ 
+              workflow: WORKFLOW.PDF,
+              stderr
+            }, 'Python script error');
+            throw new Error('Python script execution failed: ' + stderr);
+          } else if (stderr) {
+            logger.debug({
+              workflow: WORKFLOW.PDF,
+              stderr
+            }, 'Python script output');
+          }
+
+          // Check if output file exists
+          if (!fs.existsSync(finalPdfPath)) {
+            logger.error({ 
+              workflow: WORKFLOW.PDF,
+              finalPdfPath
+            }, 'Output PDF file not found');
+            throw new Error('Output PDF file not found');
           }
 
           // Read the final PDF
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            finalPdfPath
+          }, 'Reading final PDF');
+
           const finalPdfBuffer = fs.readFileSync(finalPdfPath);
+          logger.debug({ 
+            workflow: WORKFLOW.PDF,
+            size: finalPdfBuffer.length
+          }, 'Final PDF buffer size');
 
           // Clean up temp files
+          logger.debug({ 
+            workflow: WORKFLOW.PDF
+          }, 'Cleaning up temp files');
+
           fs.unlinkSync(tempPdfPath);
           fs.unlinkSync(tempJsonPath);
           fs.unlinkSync(finalPdfPath);
 
           resolve(finalPdfBuffer);
         } catch (error) {
-          console.error('Error in PDF processing:', error);
+          logger.error({ 
+            workflow: WORKFLOW.PDF,
+            error
+          }, 'Error in PDF processing');
           reject(error);
         }
       });
@@ -122,74 +206,35 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
       doc.moveDown();
 
       // Table content
-      let tableY = doc.y;
       doc.font('Helvetica');
-      
-      // Draw items
-      items.forEach(item => {
-        const y = doc.y;
-        
-        doc.text(item.description, descriptionX, y, { width: 200 });
+      let y = tableTop + 20;
+      items.forEach((item, index) => {
+        if (y > 700) { // Check if we need a new page
+          doc.addPage();
+          y = 50;
+        }
+        doc.text(item.description, descriptionX, y);
         doc.text(item.quantity.toString(), quantityX, y);
-        doc.text(`${item.unit_price.toFixed(2)} ${invoice.currency}`, priceX, y);
-        doc.text(`${item.vat_rate}%`, vatRateX, y);
-        doc.text(`${item.line_total.toFixed(2)} ${invoice.currency}`, amountX, y);
-        
-        doc.moveDown(1.5);
+        doc.text(item.unit_price.toFixed(2), priceX, y);
+        doc.text(item.vat_rate.toString(), vatRateX, y);
+        doc.text(item.line_total.toFixed(2), amountX, y);
+        y += 20;
       });
 
-      // Draw line beneath the table
-      doc.strokeColor('#aaaaaa').lineWidth(1)
-        .moveTo(50, doc.y)
-        .lineTo(550, doc.y)
-        .stroke();
-      doc.moveDown();
-
-      // Summary
-      const summaryX = 350;
-      doc.text('Subtotal:', summaryX);
-      doc.text(`${invoice.subtotal.toFixed(2)} ${invoice.currency}`, amountX);
-      doc.moveDown(0.5);
-      
-      doc.text('VAT:', summaryX);
-      doc.text(`${invoice.vat_total.toFixed(2)} ${invoice.currency}`, amountX);
-      doc.moveDown(0.5);
-      
-      doc.font('Helvetica-Bold');
-      doc.text('Total:', summaryX);
-      doc.text(`${invoice.total.toFixed(2)} ${invoice.currency}`, amountX);
-      doc.font('Helvetica');
+      // Totals
       doc.moveDown(2);
-
-      // Additional information
-      if (invoice.payment_terms) {
-        doc.fontSize(12).text(`Payment Terms: ${invoice.payment_terms}`);
-      }
-      if (invoice.purchase_order_ref) {
-        doc.text(`Reference: ${invoice.purchase_order_ref}`);
-      }
-      doc.moveDown();
-
-      // Notes
-      if (invoice.notes) {
-        doc.fontSize(12).text('Notes:');
-        doc.fontSize(10).text(invoice.notes);
-      }
-
-      // Footer
-      const footerY = doc.page.height - 50;
-      doc.fontSize(10)
-        .text(
-          `Invoice created with Factur-X/ZUGFeRD (${invoice.profile}) compliance`,
-          50,
-          footerY,
-          { align: 'center' }
-        );
+      doc.font('Helvetica-Bold');
+      doc.text(`Subtotal: ${invoice.subtotal.toFixed(2)}`, 350);
+      doc.text(`VAT Total: ${invoice.vat_total.toFixed(2)}`, 350);
+      doc.text(`Total: ${invoice.total.toFixed(2)}`, 350);
 
       // Finalize PDF
       doc.end();
-      
     } catch (error) {
+      logger.error({ 
+        workflow: WORKFLOW.PDF,
+        error
+      }, 'Error generating PDF');
       reject(error);
     }
   });

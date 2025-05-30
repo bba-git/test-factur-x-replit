@@ -7,6 +7,7 @@ import { invoiceWithItemsSchema, InvoiceWithItems, FacturXProfileEnum, Customer 
 import { apiRequest } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { logger, safeLog } from "@/utils/logger";
 import React from "react";
 
 interface CreateInvoiceModalProps {
@@ -19,12 +20,14 @@ type Step = typeof steps[number];
 
 export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
   useEffect(() => {
-    console.log('[Modal] Mount');
-    return () => console.log('[Modal] Unmount');
+    logger.debug('Modal mounted');
+    return () => logger.debug('Modal unmounted');
   }, []);
+
   useEffect(() => {
-    console.log('[Modal] Open state changed:', open);
+    logger.debug({ open }, 'Modal open state changed');
   }, [open]);
+
   const [currentStep, setCurrentStep] = useState<Step>("basic");
   const currentStepIndex = steps.indexOf(currentStep);
   const { toast } = useToast();
@@ -53,17 +56,17 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
   });
 
   useEffect(() => {
-    console.log('[Modal] Current step:', currentStep);
+    logger.debug({ currentStep }, 'Current step changed');
   }, [currentStep]);
 
   const fetchCustomers = async () => {
     try {
       const response = await apiRequest("GET", "/api/customers");
       const data = await response.json();
-      console.log('[Modal] Fetched customers:', data);
+      logger.debug({ customers: data }, 'Fetched customers');
       setCustomers(data);
     } catch (error) {
-      console.error("[Modal] Error fetching customers:", error);
+      logger.error({ error }, 'Error fetching customers');
     }
   };
 
@@ -77,7 +80,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
   // Add event listener for customer creation
   useEffect(() => {
     const handleCustomerCreated = () => {
-      console.log('[Modal] Customer created, refreshing list');
+      logger.debug('Customer created, refreshing list');
       fetchCustomers();
     };
 
@@ -88,8 +91,8 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
   }, []);
 
   const createInvoice = async (data: InvoiceWithItems) => {
-    console.log('[INVOICE][CLIENT] Starting invoice creation process');
-    console.log('[INVOICE][CLIENT] Raw form data:', JSON.stringify(data, null, 2));
+    logger.info('Starting invoice creation process');
+    logger.debug({ data }, 'Raw form data');
     
     try {
       // Convert to snake_case for the API, excluding company_profile_id
@@ -117,26 +120,30 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
         }))
       };
 
-      console.log('[INVOICE][CLIENT] Transformed API data:', JSON.stringify(apiData, null, 2));
-      console.log('[INVOICE][CLIENT] Sending API request to /api/invoices');
+      logger.debug({ apiData }, 'Transformed API data');
+      logger.debug('Sending API request to /api/invoices');
       
       const response = await apiRequest("POST", "/api/invoices", apiData);
-      console.log('[INVOICE][CLIENT] API Response status:', response.status);
+      logger.debug({ status: response.status }, 'API Response status');
       
       const invoice = await response.json();
-      console.log('[INVOICE][CLIENT] Invoice created successfully:', JSON.stringify(invoice, null, 2));
+      logger.debug({ invoice }, 'Invoice created successfully');
       
-      console.log('[INVOICE][CLIENT] Requesting PDF download for invoice:', invoice.id);
+      logger.debug({ invoiceId: invoice.id }, 'Requesting PDF download');
       const pdfResponse = await fetch(`/api/invoices/${invoice.id}/download`);
-      console.log('[INVOICE][CLIENT] PDF Response status:', pdfResponse.status);
-      console.log('[INVOICE][CLIENT] PDF Response headers:', Object.fromEntries(pdfResponse.headers.entries()));
+      logger.debug({ 
+        status: pdfResponse.status,
+        headers: Object.fromEntries(pdfResponse.headers.entries())
+      }, 'PDF Response details');
       
       const pdfBlob = await pdfResponse.blob();
-      console.log('[INVOICE][CLIENT] PDF Blob size:', pdfBlob.size, 'bytes');
-      console.log('[INVOICE][CLIENT] PDF Blob type:', pdfBlob.type);
+      logger.debug({ 
+        size: pdfBlob.size,
+        type: pdfBlob.type
+      }, 'PDF Blob details');
       
       if (pdfBlob.type !== 'application/pdf') {
-        console.error('[INVOICE][CLIENT] Invalid PDF response type:', pdfBlob.type);
+        logger.error({ type: pdfBlob.type }, 'Invalid PDF response type');
         throw new Error('Invalid PDF response type');
       }
       
@@ -150,7 +157,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log('[INVOICE][CLIENT] PDF download initiated');
+      logger.debug('PDF download initiated');
       
       toast({
         title: "Invoice created",
@@ -158,8 +165,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
       });
       onClose();
     } catch (error) {
-      console.error("[INVOICE][CLIENT] Error creating invoice:", error);
-      console.error("[INVOICE][CLIENT] Error details:", JSON.stringify(error, null, 2));
+      logger.error({ error }, 'Error creating invoice');
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create invoice. Please try again.",
@@ -169,9 +175,9 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
   };
 
   const handleNextStep = () => {
-    console.log('[INVOICE][CLIENT] Step changed:', currentStep);
+    logger.debug({ currentStep }, 'Step changed');
     if (currentStep === "review") {
-      console.log('[INVOICE][CLIENT] Form submit payload:', form.getValues());
+      logger.debug({ formData: form.getValues() }, 'Form submit payload');
       createInvoice(form.getValues());
     } else {
       setCurrentStep(steps[currentStepIndex + 1]);
@@ -195,7 +201,7 @@ export default function CreateInvoiceModal({ open, onClose }: CreateInvoiceModal
 
   // Helper for Select logging
   function logSelectEvent(name: string, event: string, value?: any) {
-    console.log(`[Select:${name}] ${event}`, value);
+    logger.debug({ name, event, value }, 'Select event');
   }
 
   return (
