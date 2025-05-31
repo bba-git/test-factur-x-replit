@@ -8,17 +8,38 @@ interface InvoiceTableProps {
   onValidateInvoice: (invoice: Invoice) => void;
 }
 
+type SortField = 'invoice_number' | 'customer_id' | 'issue_date' | 'total' | 'profile' | 'validation_status';
+type SortDirection = 'asc' | 'desc';
+
 export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
   const [currentTab, setCurrentTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProfile, setSelectedProfile] = useState("all");
   const [dateRange, setDateRange] = useState("30");
+  const [sortField, setSortField] = useState<SortField>('issue_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
     queryKey: ['/api/invoices'],
   });
 
-  const filteredInvoices = invoices?.filter(invoice => {
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return <span className="material-icons text-gray-400 text-sm">unfold_more</span>;
+    return sortDirection === 'asc' 
+      ? <span className="material-icons text-gray-500 text-sm">arrow_upward</span>
+      : <span className="material-icons text-gray-500 text-sm">arrow_downward</span>;
+  };
+
+  const filteredAndSortedInvoices = invoices?.filter(invoice => {
     // Filter by tab
     if (currentTab !== "all" && invoice.status.toLowerCase() !== currentTab) {
       return false;
@@ -38,6 +59,25 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
     }
     
     return true;
+  }).sort((a, b) => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    
+    switch (sortField) {
+      case 'invoice_number':
+        return direction * a.invoice_number.localeCompare(b.invoice_number);
+      case 'customer_id':
+        return direction * a.customer_id.localeCompare(b.customer_id);
+      case 'issue_date':
+        return direction * (new Date(a.issue_date).getTime() - new Date(b.issue_date).getTime());
+      case 'total':
+        return direction * (a.total - b.total);
+      case 'profile':
+        return direction * a.profile.localeCompare(b.profile);
+      case 'validation_status':
+        return direction * (a.validation_status || '').localeCompare(b.validation_status || '');
+      default:
+        return 0;
+    }
   });
 
   const handleView = (invoice: Invoice) => {
@@ -53,6 +93,16 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
   const handleDownload = (invoice: Invoice) => {
     // Download invoice implementation
     window.open(`/api/invoices/${invoice.id}/download`, "_blank");
+  };
+
+  const handleDownloadXMP = (invoice: Invoice) => {
+    // Download XMP metadata
+    window.open(`/api/invoices/${invoice.id}/metadata`, "_blank");
+  };
+
+  const handleDownloadXML = (invoice: Invoice) => {
+    // Download XML content
+    window.open(`/api/invoices/${invoice.id}/xml`, "_blank");
   };
 
   const getStatusBadgeClasses = (status: string | undefined | null) => {
@@ -157,23 +207,59 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Invoice #
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('invoice_number')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Invoice #</span>
+                      {getSortIcon('invoice_number')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('customer_id')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Customer</span>
+                      {getSortIcon('customer_id')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('issue_date')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Date</span>
+                      {getSortIcon('issue_date')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('total')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Amount</span>
+                      {getSortIcon('total')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Profile
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('profile')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Profile</span>
+                      {getSortIcon('profile')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('validation_status')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {getSortIcon('validation_status')}
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -181,8 +267,8 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredInvoices && filteredInvoices.length > 0 ? (
-                  filteredInvoices.map((invoice) => (
+                {filteredAndSortedInvoices && filteredAndSortedInvoices.length > 0 ? (
+                  filteredAndSortedInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-primary">{invoice.invoice_number}</div>
@@ -222,10 +308,24 @@ export default function InvoiceTable({ onValidateInvoice }: InvoiceTableProps) {
                           <span className="material-icons">edit</span>
                         </button>
                         <button 
-                          className="text-primary hover:text-blue-800"
+                          className="text-primary hover:text-blue-800 mr-3"
                           onClick={() => handleDownload(invoice)}
                         >
                           <span className="material-icons">file_download</span>
+                        </button>
+                        <button 
+                          className="text-primary hover:text-blue-800 mr-3"
+                          onClick={() => handleDownloadXMP(invoice)}
+                          title="Download XMP Metadata"
+                        >
+                          <span className="material-icons">description</span>
+                        </button>
+                        <button 
+                          className="text-primary hover:text-blue-800"
+                          onClick={() => handleDownloadXML(invoice)}
+                          title="Download XML Content"
+                        >
+                          <span className="material-icons">code</span>
                         </button>
                       </td>
                     </tr>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+           xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+           xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:100"
+           xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
+           targetNamespace="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+           elementFormDefault="qualified">
+
+  <!-- Basic types -->
+  <xs:simpleType name="AmountType">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="18"/>
+      <xs:fractionDigits value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="QuantityType">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="18"/>
+      <xs:fractionDigits value="4"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Invoice structure -->
+  <xs:element name="CrossIndustryInvoice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="ExchangedDocumentContext" type="ram:ExchangedDocumentContextType"/>
+        <xs:element name="ExchangedDocument" type="ram:ExchangedDocumentType"/>
+        <xs:element name="SupplyChainTradeTransaction" type="ram:SupplyChainTradeTransactionType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Document context -->
+  <xs:complexType name="ExchangedDocumentContextType">
+    <xs:sequence>
+      <xs:element name="GuidelineSpecifiedDocumentContextParameter" type="ram:DocumentContextParameterType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="DocumentContextParameterType">
+    <xs:sequence>
+      <xs:element name="ID" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Document header -->
+  <xs:complexType name="ExchangedDocumentType">
+    <xs:sequence>
+      <xs:element name="ID" type="xs:string"/>
+      <xs:element name="TypeCode" type="xs:string"/>
+      <xs:element name="IssueDateTime" type="ram:DateTimeType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Trade transaction -->
+  <xs:complexType name="SupplyChainTradeTransactionType">
+    <xs:sequence>
+      <xs:element name="IncludedSupplyChainTradeLineItem" type="ram:SupplyChainTradeLineItemType" maxOccurs="unbounded"/>
+      <xs:element name="ApplicableHeaderTradeSettlement" type="ram:TradeSettlementType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Line items -->
+  <xs:complexType name="SupplyChainTradeLineItemType">
+    <xs:sequence>
+      <xs:element name="AssociatedDocumentLineDocument" type="ram:DocumentLineType"/>
+      <xs:element name="SpecifiedTradeProduct" type="ram:TradeProductType"/>
+      <xs:element name="SpecifiedLineTradeAgreement" type="ram:TradeAgreementType"/>
+      <xs:element name="SpecifiedLineTradeDelivery" type="ram:TradeDeliveryType"/>
+      <xs:element name="SpecifiedLineTradeSettlement" type="ram:TradeSettlementType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Common types -->
+  <xs:complexType name="DateTimeType">
+    <xs:sequence>
+      <xs:element name="DateTimeString" type="udt:DateTimeStringType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TradeSettlementType">
+    <xs:sequence>
+      <xs:element name="ApplicableTradeTax" type="ram:TradeTaxType" maxOccurs="unbounded"/>
+      <xs:element name="SpecifiedTradeSettlementHeaderMonetarySummation" type="ram:TradeSettlementHeaderMonetarySummationType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TradeTaxType">
+    <xs:sequence>
+      <xs:element name="TypeCode" type="xs:string"/>
+      <xs:element name="CategoryCode" type="xs:string"/>
+      <xs:element name="Percent" type="xs:decimal"/>
+      <xs:element name="CalculatedAmount" type="AmountType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TradeSettlementHeaderMonetarySummationType">
+    <xs:sequence>
+      <xs:element name="LineTotalAmount" type="AmountType"/>
+      <xs:element name="TaxBasisTotalAmount" type="AmountType"/>
+      <xs:element name="TaxTotalAmount" type="AmountType"/>
+      <xs:element name="GrandTotalAmount" type="AmountType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema> 

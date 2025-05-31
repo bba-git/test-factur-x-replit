@@ -393,4 +393,145 @@ router.get('/:id/download', async (req: Request, res: Response) => {
   }
 });
 
+// Download invoice XMP metadata
+router.get('/:id/metadata', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  logger.info({ 
+    workflow: WORKFLOW.INVOICE,
+    invoiceId: id,
+    requestId: req.requestId 
+  }, 'Starting XMP metadata download');
+
+  try {
+    // Get invoice data
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (invoiceError || !invoice) {
+      logger.error({ 
+        workflow: WORKFLOW.INVOICE,
+        error: invoiceError,
+        invoiceId: id,
+        requestId: req.requestId 
+      }, 'Invoice not found');
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Get invoice items
+    const { data: items, error: itemsError } = await supabase
+      .from('invoice_items')
+      .select('*')
+      .eq('invoice_id', id);
+
+    if (itemsError) {
+      logger.error({ 
+        workflow: WORKFLOW.INVOICE,
+        error: itemsError,
+        invoiceId: id,
+        requestId: req.requestId 
+      }, 'Failed to fetch invoice items');
+      return res.status(500).json({ message: 'Failed to fetch invoice items' });
+    }
+
+    // Generate XML
+    const xml = await generateZugferdXml(invoice as Invoice, items as InvoiceItem[]);
+
+    // Generate XMP metadata
+    const xmpMetadata = generateXMPMetadata(xml, invoice.invoice_number);
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}-metadata.xmp"`);
+    
+    // Send XMP metadata
+    res.send(xmpMetadata);
+    logger.info({ 
+      workflow: WORKFLOW.INVOICE,
+      invoiceId: id,
+      requestId: req.requestId 
+    }, 'XMP metadata download completed successfully');
+  } catch (error) {
+    logger.error({ 
+      workflow: WORKFLOW.INVOICE,
+      error,
+      stack: error instanceof Error ? error.stack : undefined,
+      invoiceId: id,
+      requestId: req.requestId 
+    }, 'Unexpected error in XMP metadata download');
+    return res.status(500).json({ message: 'Failed to generate XMP metadata' });
+  }
+});
+
+// Download invoice XML content
+router.get('/:id/xml', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  logger.info({ 
+    workflow: WORKFLOW.INVOICE,
+    invoiceId: id,
+    requestId: req.requestId 
+  }, 'Starting XML content download');
+
+  try {
+    // Get invoice data
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (invoiceError || !invoice) {
+      logger.error({ 
+        workflow: WORKFLOW.INVOICE,
+        error: invoiceError,
+        invoiceId: id,
+        requestId: req.requestId 
+      }, 'Invoice not found');
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Get invoice items
+    const { data: items, error: itemsError } = await supabase
+      .from('invoice_items')
+      .select('*')
+      .eq('invoice_id', id);
+
+    if (itemsError) {
+      logger.error({ 
+        workflow: WORKFLOW.INVOICE,
+        error: itemsError,
+        invoiceId: id,
+        requestId: req.requestId 
+      }, 'Failed to fetch invoice items');
+      return res.status(500).json({ message: 'Failed to fetch invoice items' });
+    }
+
+    // Generate XML
+    const xml = await generateZugferdXml(invoice as Invoice, items as InvoiceItem[]);
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}.xml"`);
+    
+    // Send XML content
+    res.send(xml);
+    logger.info({ 
+      workflow: WORKFLOW.INVOICE,
+      invoiceId: id,
+      requestId: req.requestId 
+    }, 'XML content download completed successfully');
+  } catch (error) {
+    logger.error({ 
+      workflow: WORKFLOW.INVOICE,
+      error,
+      stack: error instanceof Error ? error.stack : undefined,
+      invoiceId: id,
+      requestId: req.requestId 
+    }, 'Unexpected error in XML content download');
+    return res.status(500).json({ message: 'Failed to generate XML content' });
+  }
+});
+
 export default router; 
