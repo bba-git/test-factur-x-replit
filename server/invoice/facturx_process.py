@@ -8,11 +8,8 @@ import datetime
 import hashlib
 import subprocess
 import shlex
-from pypdf import PdfReader, PdfWriter
-from pypdf.generic import (
-    NameObject, DictionaryObject, ArrayObject, ByteStringObject, TextStringObject,
-    StreamObject, NumberObject, create_string_object
-)
+import pikepdf
+from pikepdf import Pdf, Dictionary, Name, Array
 import xml.etree.ElementTree as ET
 
 # Configure logging
@@ -34,16 +31,17 @@ def convert_to_pdfa3(input_pdf: str, output_pdf: str) -> bool:
 
         logger.info(f"Using ICC profile: {icc_profile}")
 
-        cmd = [
+        gs_command = [
             "gs",
             "-dPDFA=3",
             "-dBATCH",
             "-dNOPAUSE",
+            "-dQUIET",
             "-sDEVICE=pdfwrite",
             "-dPDFACompatibilityPolicy=1",
             "-dProcessColorModel=/DeviceRGB",
             "-dColorConversionStrategy=/sRGB",
-            "-sColorConversionStrategyForImages=/sRGB",
+            "-dColorConversionStrategyForImages=/sRGB",
             "-sOutputConditionIdentifier=sRGB IEC61966-2.1",
             "-sOutputCondition=sRGB IEC61966-2.1",
             "-sPDFAOutputConditionIdentifier=sRGB IEC61966-2.1",
@@ -52,7 +50,7 @@ def convert_to_pdfa3(input_pdf: str, output_pdf: str) -> bool:
             input_pdf
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(gs_command, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error("Ghostscript command failed")
             logger.error("stdout: " + result.stdout)
@@ -73,99 +71,140 @@ def convert_to_pdfa3(input_pdf: str, output_pdf: str) -> bool:
 def embed_xml_in_pdf(pdf_path, xml_content, invoice_number):
     """Embed XML content into PDF/A-3 file with proper XMP metadata."""
     try:
-        # Read the PDF
-        reader = PdfReader(pdf_path)
-        writer = PdfWriter()
+        logger.info(f"Embedding XML into {pdf_path}")
+        
+        # Open the PDF with overwriting allowed
+        pdf = Pdf.open(pdf_path, allow_overwriting_input=True)
+        
+        # Read ICC profile
+        icc_profile = "/System/Library/ColorSync/Profiles/sRGB Profile.icc"
+        if not os.path.exists(icc_profile):
+            logger.error(f"ICC profile not found at {icc_profile}")
+            return False
+            
+        with open(icc_profile, 'rb') as f:
+            icc_data = f.read()
+        
+        # Create output intent with ICC profile
+        output_intent = pdf.make_stream(icc_data)
+        output_intent.Type = Name.OutputIntent
+        output_intent.S = Name.GTS_PDFA1
+        output_intent.OutputConditionIdentifier = "sRGB IEC61966-2.1"
+        output_intent.Info = "sRGB IEC61966-2.1"
+        output_intent.RegistryName = "http://www.color.org"
+        
+        # Add output intent to PDF catalog
+        if Name.OutputIntents not in pdf.Root:
+            pdf.Root[Name.OutputIntents] = Array()
+        pdf.Root[Name.OutputIntents].append(pdf.make_indirect(output_intent))
 
-        # Copy all pages
-        for page in reader.pages:
-            writer.add_page(page)
+        # Set up DefaultRGB color space
+        if Name.Resources not in pdf.Root:
+            pdf.Root[Name.Resources] = Dictionary()
+        
+        if Name.ColorSpace not in pdf.Root[Name.Resources]:
+            pdf.Root[Name.Resources][Name.ColorSpace] = Dictionary()
+        
+        # Create ICCBased color space for RGB
+        icc_stream = pdf.make_stream(icc_data)
+        icc_stream.N = 3  # Number of color components (RGB)
+        icc_stream.Alternate = Name.DeviceRGB
+        
+        # Add ICCBased color space as DefaultRGB
+        pdf.Root[Name.Resources][Name.ColorSpace][Name.DefaultRGB] = Array([Name.ICCBased, pdf.make_indirect(icc_stream)])
 
-        # Create XML stream
-        xml_stream = StreamObject()
-        xml_stream._data = xml_content.encode('utf-8')
-        xml_stream.update({
-            NameObject('/Type'): NameObject('/EmbeddedFile'),
-            NameObject('/Subtype'): NameObject('/text/xml'),
-            NameObject('/Params'): DictionaryObject({
-                NameObject('/Size'): NumberObject(len(xml_content.encode('utf-8'))),
-                NameObject('/ModDate'): create_string_object(datetime.datetime.now().strftime('D:%Y%m%d%H%M%S')),
-                NameObject('/CheckSum'): create_string_object(hashlib.md5(xml_content.encode('utf-8')).hexdigest())
-            })
-        })
+        # Create ICCBased color space for Gray
+        gray_icc_stream = pdf.make_stream(icc_data)
+        gray_icc_stream.N = 1  # Number of color components (Gray)
+        gray_icc_stream.Alternate = Name.DeviceGray
 
-        # Create file specification
-        file_spec = DictionaryObject()
-        file_spec.update({
-            NameObject('/Type'): NameObject('/Filespec'),
-            NameObject('/F'): create_string_object('factur-x.xml'),
-            NameObject('/EF'): DictionaryObject({
-                NameObject('/F'): xml_stream
-            }),
-            NameObject('/AFRelationship'): NameObject('/Alternative'),
-            NameObject('/Description'): create_string_object('Factur-X Invoice'),
-            NameObject('/MimeType'): create_string_object('text/xml')
-        })
-
-        # Add to PDF
-        writer._add_object(xml_stream)
-        writer._add_object(file_spec)
-
-        # Create embedded files name tree
-        names = DictionaryObject()
-        names.update({
-            NameObject('/Names'): ArrayObject([
-                create_string_object('factur-x.xml'),
-                writer._add_object(file_spec)
+        # Add DefaultGray to each page
+        for page in pdf.pages:
+            resources = page.get('/Resources', Dictionary())
+            if Name.ColorSpace not in resources:
+                resources[Name.ColorSpace] = Dictionary()
+            resources[Name.ColorSpace][Name.DefaultGray] = Array([
+                Name.ICCBased,
+                pdf.make_indirect(gray_icc_stream)
             ])
-        })
-        writer._add_object(names)
-
-        # Update PDF catalog
-        writer._root_object.update({
-            NameObject('/Names'): DictionaryObject({
-                NameObject('/EmbeddedFiles'): writer._add_object(names)
-            })
-        })
-
+            page[Name.Resources] = resources
+        
+        # Create XML stream
+        xml_stream = pdf.make_stream(xml_content.encode('utf-8'))
+        xml_stream.Type = Name.EmbeddedFile
+        xml_stream.Subtype = "application/xml"
+        
+        # Create file specification
+        filespec = Dictionary()
+        filespec.Type = Name.Filespec
+        filespec.F = "factur-x.xml"
+        filespec.UF = "factur-x.xml"
+        filespec.AFRelationship = Name.Alternative
+        filespec.Desc = "Factur-X Invoice"
+        
+        # Add file to filespec
+        ef_dict = Dictionary()
+        ef_dict.F = xml_stream
+        filespec.EF = ef_dict
+        
+        # Add to root AF array
+        if Name.AF not in pdf.Root:
+            pdf.Root[Name.AF] = Array()
+        pdf.Root[Name.AF].append(pdf.make_indirect(filespec))
+        
+        # Add to Names tree
+        if Name.Names not in pdf.Root:
+            pdf.Root[Name.Names] = Dictionary()
+        
+        if Name.EmbeddedFiles not in pdf.Root[Name.Names]:
+            pdf.Root[Name.Names][Name.EmbeddedFiles] = Dictionary()
+        
+        efDict = pdf.Root[Name.Names][Name.EmbeddedFiles]
+        
+        if Name.Names not in efDict:
+            efDict[Name.Names] = Array()
+        
+        # Add to names array
+        efDict[Name.Names].append("factur-x.xml")
+        efDict[Name.Names].append(pdf.make_indirect(filespec))
+        
         # Add XMP metadata
         xmp_metadata = generateXMPMetadata(xml_content, invoice_number)
-
-        xmp_stream = StreamObject()
-        xmp_stream._data = xmp_metadata.encode('utf-8')
-        xmp_stream.update({
-            NameObject('/Type'): NameObject('/Metadata'),
-            NameObject('/Subtype'): NameObject('/XML'),
-            NameObject('/Length'): NumberObject(len(xmp_metadata.encode('utf-8')))
-        })
-
+        xmp_stream = pdf.make_stream(xmp_metadata.encode('utf-8'))
+        xmp_stream.Type = Name.Metadata
+        xmp_stream.Subtype = "application/rdf+xml"
+        
         # Add XMP metadata
-        writer._add_object(xmp_stream)
-        writer._root_object.update({
-            NameObject('/Metadata'): writer._add_object(xmp_stream)
-        })
+        pdf.Root.Metadata = xmp_stream
+        
+        # Save the modified PDF
+        pdf.save(pdf_path)
+        logger.info(f"Successfully embedded XML and saved to {pdf_path}")
 
-        # Add output intent
-        output_intent = DictionaryObject()
-        output_intent.update({
-            NameObject('/Type'): NameObject('/OutputIntent'),
-            NameObject('/S'): NameObject('/GTS_PDFA1'),
-            NameObject('/OutputConditionIdentifier'): create_string_object('sRGB IEC61966-2.1'),
-            NameObject('/Info'): create_string_object('sRGB IEC61966-2.1'),
-            NameObject('/RegistryName'): create_string_object('http://www.color.org')
-        })
-
-        # Add output intent
-        writer._add_object(output_intent)
-        writer._root_object.update({
-            NameObject('/OutputIntents'): ArrayObject([writer._add_object(output_intent)])
-        })
-
-        # Write the modified PDF
-        with open(pdf_path, 'wb') as output_file:
-            writer.write(output_file)
-
+        # Validate DefaultGray color space
+        validation_pdf = Pdf.open(pdf_path)
+        for i, page in enumerate(validation_pdf.pages):
+            resources = page.get('/Resources', {})
+            colorspace = resources.get('/ColorSpace', {})
+            default_gray = colorspace.get('/DefaultGray', None)
+            
+            if default_gray is None:
+                logger.error(f"Page {i+1}: DefaultGray color space not found")
+                return False
+                
+            if not isinstance(default_gray, Array) or len(default_gray) != 2:
+                logger.error(f"Page {i+1}: DefaultGray is not a valid ICCBased array")
+                return False
+                
+            if default_gray[0] != Name.ICCBased:
+                logger.error(f"Page {i+1}: DefaultGray is not ICCBased")
+                return False
+                
+            logger.info(f"Page {i+1}: DefaultGray color space validated successfully")
+            
+        logger.info("All pages validated successfully")
         return True
+        
     except Exception as e:
         logger.error(f"Error embedding XML: {str(e)}")
         return False

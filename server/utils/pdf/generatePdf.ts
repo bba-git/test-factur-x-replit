@@ -50,6 +50,10 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
         }
       });
 
+      // Enforce RGB color space
+      doc.fillColor('#000000'); // Set default fill color to black in RGB
+      doc.strokeColor('#000000'); // Set default stroke color to black in RGB
+
       // Collect PDF data chunks
       doc.on('data', buffers.push.bind(buffers));
       
@@ -220,6 +224,12 @@ export async function generatePdf(invoice: Invoice, items: InvoiceItem[], xmlCon
         doc.text(item.line_total.toFixed(2), amountX, y);
         y += 20;
       });
+
+      // Draw line beneath the table
+      doc.strokeColor('#aaaaaa').lineWidth(1)
+        .moveTo(50, doc.y)
+        .lineTo(550, doc.y)
+        .stroke();
 
       // Totals
       doc.moveDown(2);
